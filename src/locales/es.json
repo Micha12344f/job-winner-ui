@@ -9,6 +9,7 @@
     "lightMode": "Modo claro",
     "bookmarks": "Marcadores",
     "qa": "Preguntas y respuestas",
+    "documents": "Documentos",
     "interviewList": "Lista de entrevistas",
     "offerList": "Lista de ofertas",
     "profile": "Perfil",
@@ -306,5 +307,31 @@
       "deleteError": "Error al eliminar la entrevista."
     },
     "autosave": "Los cambios se guardan automáticamente"
+  },
+  "documents": {
+    "title": "Documentos",
+    "subtitle": "CVs y cartas de presentación guardados en tu servidor de Job Winner.",
+    "uploadTitle": "Subir un documento",
+    "label": "Etiqueta",
+    "labelPlaceholder": "p. ej. CV de ingeniero sénior",
+    "jobApplicationId": "ID de solicitud (opcional)",
+    "chooseFile": "Elegir archivo",
+    "upload": "Subir",
+    "uploading": "Subiendo…",
+    "allowedTypes": "PDF, DOCX, DOC, TXT o MD, hasta 10 MB.",
+    "listTitle": "Documentos guardados",
+    "emptyTitle": "Aún no hay documentos",
+    "empty": "Sube un CV o una carta de presentación para guardarlo con tus solicitudes.",
+    "loadError": "No se pudieron cargar tus documentos.",
+    "uploadSuccess": "Documento subido.",
+    "uploadError": "No se pudo subir. Inténtalo de nuevo.",
+    "deleteSuccess": "Documento eliminado.",
+    "deleteError": "No se pudo eliminar el documento.",
+    "download": "Descargar {{name}}",
+    "delete": "Eliminar {{name}}",
+    "confirmTitle": "Eliminar documento",
+    "confirmContent": "¿Eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
+    "uploaded": "Subido el {{date}}",
+    "jobApplication": "Solicitud n.º {{id}}"
   }
 }

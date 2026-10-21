@@ -9,6 +9,7 @@
     "lightMode": "Light mode",
     "bookmarks": "Bookmarks",
     "qa": "Q&A",
+    "documents": "Documents",
     "interviewList": "Interview list",
     "offerList": "Offer list",
     "profile": "Profile",
@@ -306,5 +307,31 @@
       "deleteError": "Error deleting interview."
     },
     "autosave": "Changes save automatically"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "CVs and cover letters stored on your Job Winner server.",
+    "uploadTitle": "Upload a document",
+    "label": "Label",
+    "labelPlaceholder": "e.g. Senior engineer CV",
+    "jobApplicationId": "Application ID (optional)",
+    "chooseFile": "Choose file",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "allowedTypes": "PDF, DOCX, DOC, TXT or MD, up to 10 MB.",
+    "listTitle": "Stored documents",
+    "emptyTitle": "No documents yet",
+    "empty": "Upload a CV or cover letter to keep it with your applications.",
+    "loadError": "Could not load your documents.",
+    "uploadSuccess": "Document uploaded.",
+    "uploadError": "Upload failed. Please try again.",
+    "deleteSuccess": "Document deleted.",
+    "deleteError": "Could not delete the document.",
+    "download": "Download {{name}}",
+    "delete": "Delete {{name}}",
+    "confirmTitle": "Delete document",
+    "confirmContent": "Delete \"{{name}}\"? This cannot be undone.",
+    "uploaded": "Uploaded {{date}}",
+    "jobApplication": "Application #{{id}}"
   }
 }

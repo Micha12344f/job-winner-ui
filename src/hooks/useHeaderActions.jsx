@@ -1,4 +1,5 @@
 import BookmarksOutlinedIcon from '@mui/icons-material/BookmarksOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
 import QuestionAnswerOutlinedIcon from '@mui/icons-material/QuestionAnswerOutlined';
@@ -13,6 +14,7 @@ export default function useHeaderActions() {
     openQuestions,
     openInterviewList,
     openOfferList,
+    openDocuments,
     interviewCount,
     offerCount,
     interviewsLoading,
@@ -20,6 +22,12 @@ export default function useHeaderActions() {
   } = useAppDialogs();
 
   return [
+    {
+      key: 'documents',
+      label: t('appHeader.documents'),
+      icon: <DescriptionOutlinedIcon />,
+      onClick: openDocuments,
+    },
     {
       key: 'bookmarks',
       label: t('appHeader.bookmarks'),

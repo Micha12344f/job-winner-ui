@@ -10,6 +10,7 @@ const loaders = {
   ProfileDialog: () => import('./ProfileDialog'),
   InterviewListDialog: () => import('./InterviewListDialog'),
   OfferListDialog: () => import('./OfferListDialog'),
+  DocumentsDialog: () => import('./DocumentsDialog'),
 };
 
 export const JobApplicationDialog = lazy(loaders.JobApplicationDialog);
@@ -18,6 +19,7 @@ export const QuestionDialog = lazy(loaders.QuestionDialog);
 export const ProfileDialog = lazy(loaders.ProfileDialog);
 export const InterviewListDialog = lazy(loaders.InterviewListDialog);
 export const OfferListDialog = lazy(loaders.OfferListDialog);
+export const DocumentsDialog = lazy(loaders.DocumentsDialog);
 
 // Warms the dialog chunks once the browser is idle, so the first open does
 // not wait on the network.

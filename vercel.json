@@ -6,6 +6,8 @@
   "outputDirectory": "dist",
   "routes": [
     { "src": "/api/graphql", "dest": "/api/graphql" },
+    { "src": "/api/files", "dest": "/api/files" },
+    { "src": "/api/files/(.*)", "dest": "/api/files" },
     { "handle": "filesystem" },
     { "src": "/api/(.*)", "status": 404 },
     { "src": "/(.*)", "dest": "/index.html" }

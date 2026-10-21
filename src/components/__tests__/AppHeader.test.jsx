@@ -12,6 +12,7 @@ const renderHeader = (overrides = {}) => {
     openQuestions: vi.fn(),
     openInterviewList: vi.fn(),
     openOfferList: vi.fn(),
+    openDocuments: vi.fn(),
     openProfile: vi.fn(),
     profileName: 'Test User',
     interviewCount: 2,
@@ -36,6 +37,7 @@ const button = name => screen.getByRole('button', { name, hidden: true });
 
 describe('AppHeader', () => {
   test.each([
+    ['Documents', 'openDocuments'],
     ['Bookmarks', 'openFrequentUrls'],
     ['Q&A', 'openQuestions'],
     ['Interview list', 'openInterviewList'],
