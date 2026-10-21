@@ -99,6 +99,30 @@ describe('job application save', () => {
 });
 
 describe('profile save', () => {
+  test('profile inputs match the backend field limits', () => {
+    renderWith(
+      <ProfileDialog
+        profile={{ firstName: 'Ryan', telephone: '', linkedin: '', github: '' }}
+        open
+        handleClose={vi.fn()}
+      />,
+      []
+    );
+
+    expect(screen.getByLabelText('Phone number')).toHaveAttribute(
+      'maxlength',
+      '20'
+    );
+    expect(screen.getByLabelText('LinkedIn')).toHaveAttribute(
+      'maxlength',
+      '200'
+    );
+    expect(screen.getByLabelText('ZIP code')).toHaveAttribute(
+      'maxlength',
+      '20'
+    );
+  });
+
   test('a failed save shows an error, not success', async () => {
     renderWith(
       <ProfileDialog

@@ -3,7 +3,7 @@ import TextField from '@mui/material/TextField';
 import CopyButton from './CopyButton';
 
 // Profile field with a copy button inside it.
-const ProfileTextField = ({ id, label, value, onChange }) => (
+const ProfileTextField = ({ id, label, value, onChange, maxLength }) => (
   <TextField
     id={id}
     name={id}
@@ -13,6 +13,7 @@ const ProfileTextField = ({ id, label, value, onChange }) => (
     value={value}
     onChange={onChange}
     slotProps={{
+      htmlInput: maxLength ? { maxLength } : undefined,
       input: {
         endAdornment: (
           <InputAdornment position="end">

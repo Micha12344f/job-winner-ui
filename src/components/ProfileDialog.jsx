@@ -17,33 +17,33 @@ const sections = [
   {
     key: 'name',
     fields: [
-      ['firstName', 6],
-      ['lastName', 6],
+      ['firstName', 6, 200],
+      ['lastName', 6, 200],
     ],
   },
   {
     key: 'contact',
     fields: [
-      ['email', 6],
-      ['telephone', 6],
+      ['email', 6, 200],
+      ['telephone', 6, 20],
     ],
   },
   {
     key: 'address',
     fields: [
-      ['addressStreet1', 12],
-      ['addressStreet2', 12],
-      ['addressCity', 6],
-      ['addressState', 3],
-      ['addressZip', 3],
+      ['addressStreet1', 12, 200],
+      ['addressStreet2', 12, 200],
+      ['addressCity', 6, 50],
+      ['addressState', 3, 50],
+      ['addressZip', 3, 20],
     ],
   },
   {
     key: 'links',
     fields: [
-      ['linkedin', 6],
-      ['github', 6],
-      ['personalWebsite', 12],
+      ['linkedin', 6, 200],
+      ['github', 6, 200],
+      ['personalWebsite', 12, 200],
     ],
   },
 ];
@@ -117,13 +117,14 @@ export default function ProfileDialog({ profile, handleClose, open }) {
               {t(`dialogs.profile.sections.${section.key}`)}
             </Typography>
             <Grid container spacing={2}>
-              {section.fields.map(([fieldId, width]) => (
+              {section.fields.map(([fieldId, width, maxLength]) => (
                 <Grid key={fieldId} size={{ xs: 12, sm: width }}>
                   <ProfileTextField
                     id={fieldId}
                     label={t(`dialogs.profile.fields.${fieldId}`)}
                     value={formData[fieldId] ?? ''}
                     onChange={handleChange}
+                    maxLength={maxLength}
                   />
                 </Grid>
               ))}
