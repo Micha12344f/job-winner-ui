@@ -34,6 +34,16 @@ const colorSchemes = {
       custom: {
         table: { header: '#EEF2FF', headerHover: '#E0E7FF' },
       },
+      // Contribution-heatmap cells: a dim neutral for empty days, then four
+      // tints climbing to the primary accent. Fixed steps (not alpha blends)
+      // so both schemes stay legible on their own paper colour.
+      heatmap: {
+        empty: '#E9EDF3',
+        level1: '#DCD8FB',
+        level2: '#B4ACF6',
+        level3: '#8B7DF0',
+        level4: '#4F46E5',
+      },
       // Job status tones: main for accents, soft/text for tinted chips,
       // solid/solidText for the selected filter. All text pairs pass WCAG AA.
       status: {
@@ -101,6 +111,14 @@ const colorSchemes = {
       divider: '#1F2937',
       custom: {
         table: { header: '#1E1B4B', headerHover: '#312E81' },
+      },
+      // Brightness climbs towards the light indigo accent on dark paper.
+      heatmap: {
+        empty: '#1E293B',
+        level1: '#312E81',
+        level2: '#4F46E5',
+        level3: '#818CF8',
+        level4: '#C7D2FE',
       },
       status: {
         all: {

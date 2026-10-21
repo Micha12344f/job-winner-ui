@@ -9,6 +9,7 @@ import AlertTitle from '@mui/material/AlertTitle';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
+import ApplicationHeatmap from './ApplicationHeatmap';
 import MountOnFirstOpen from './common/MountOnFirstOpen';
 import { JobApplicationDialog } from './lazyDialogs';
 import { STATUS_SORT_ORDER } from '../config/status';
@@ -125,11 +126,14 @@ export default function JobApplicationList({ searchTerm, onClearSearch }) {
             </Alert>
           )}
           {!showSkeleton && !error && totalCount > 0 && (
-            <JobStatusBar
-              data={data}
-              selectedStatus={selectedStatus}
-              handleStatusClick={handleStatusClick}
-            />
+            <>
+              <ApplicationHeatmap applications={data.allJobApplication} />
+              <JobStatusBar
+                data={data}
+                selectedStatus={selectedStatus}
+                handleStatusClick={handleStatusClick}
+              />
+            </>
           )}
           {!showSkeleton && !error && data && totalCount === 0 && (
             <EmptyState

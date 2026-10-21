@@ -26,6 +26,8 @@ export default function CustomDialog({
   onSave = null,
   // Disables the primary action while a save is in flight.
   saving = false,
+  // Disables the primary action for invalid input, without hiding it.
+  saveDisabled = false,
   saveLabel,
   addLabel,
 }) {
@@ -104,7 +106,11 @@ export default function CustomDialog({
             </Button>
           )}
           {onSave && (
-            <Button variant="contained" onClick={onSave} disabled={saving}>
+            <Button
+              variant="contained"
+              onClick={onSave}
+              disabled={saving || saveDisabled}
+            >
               {saveLabel ?? t('common.save')}
             </Button>
           )}

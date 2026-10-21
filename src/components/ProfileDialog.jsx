@@ -8,6 +8,7 @@ import { UPDATE_PROFILE } from '../graphql/mutation';
 import { GET_PROFILE } from '../graphql/query';
 import useAsyncAction from '../hooks/useAsyncAction';
 import ProfileTextField from './ProfileTextField';
+import CvLibrarySection from './CvLibrarySection';
 import CustomDialog from './common/CustomDialog';
 import { useTranslation } from 'react-i18next';
 
@@ -129,6 +130,7 @@ export default function ProfileDialog({ profile, handleClose, open }) {
             </Grid>
           </Box>
         ))}
+        <CvLibrarySection open={open} />
       </DialogContent>
     </CustomDialog>
   );

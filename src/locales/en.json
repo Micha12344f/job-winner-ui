@@ -88,7 +88,8 @@
       "tabs": {
         "application": "Application",
         "interviews": "Interviews",
-        "offer": "Offer"
+        "offer": "Offer",
+        "leads": "Leads"
       },
       "addSubtitle": "Track a job you applied to."
     },
@@ -136,6 +137,10 @@
     "confirmInterviewDeletion": {
       "title": "Confirm deletion",
       "content": "Are you sure you want to delete this interview? This action cannot be undone."
+    },
+    "confirmLeadDeletion": {
+      "title": "Delete lead",
+      "content": "Delete \"{{name}}\"? This cannot be undone."
     }
   },
   "forms": {
@@ -270,7 +275,8 @@
     "done": "Done",
     "deleteNamed": "Delete {{name}}?",
     "editItem": "Edit {{name}}",
-    "deleteItem": "Delete {{name}}"
+    "deleteItem": "Delete {{name}}",
+    "retry": "Retry"
   },
   "questionContent": {
     "messages": {
@@ -332,6 +338,143 @@
     "confirmTitle": "Delete document",
     "confirmContent": "Delete \"{{name}}\"? This cannot be undone.",
     "uploaded": "Uploaded {{date}}",
-    "jobApplication": "Application #{{id}}"
+    "jobApplication": "Application #{{id}}",
+    "library": {
+      "title": "Documents & CVs",
+      "subtitle": "Upload CVs and supporting documents, then keep them organised by category.",
+      "uploadTitle": "Add a document",
+      "category": "Category",
+      "categoryHelper": "Pick a suggestion or type your own. Defaults to General.",
+      "headline": "Headline",
+      "headlinePlaceholder": "e.g. Senior finance analyst CV",
+      "chooseFiles": "Choose files",
+      "filesSelected_one": "{{count}} file selected",
+      "filesSelected_other": "{{count}} files selected",
+      "uploadProgress": "Uploading {{done}} of {{total}}…",
+      "listTitle": "Your documents",
+      "emptyTitle": "No documents yet",
+      "empty": "Upload a CV or supporting document to keep it with your profile.",
+      "untitled": "Untitled document",
+      "docCount_one": "{{count}} document",
+      "docCount_other": "{{count}} documents",
+      "primaryBadge": "Primary",
+      "makePrimary": "Mark {{name}} as primary",
+      "primarySuccess": "Primary document updated.",
+      "primaryError": "Could not update the primary document.",
+      "edit": "Edit {{name}}",
+      "editTitle": "Edit document",
+      "editSave": "Save document",
+      "editSuccess": "Document updated.",
+      "editError": "Could not update the document.",
+      "notes": "Notes",
+      "notesPlaceholder": "Anything worth remembering about this document",
+      "deleteSuccess": "Document deleted.",
+      "deleteError": "Could not delete the document.",
+      "retry": "Try again",
+      "errors": {
+        "missingFile": "Choose at least one file to upload.",
+        "type": "{{name}} is not a supported file type. Use {{allowed}}.",
+        "tooLarge": "{{name}} is {{size}}, over the {{limit}} limit for uploads from this page.",
+        "empty": "{{name}} is empty.",
+        "uploadSomeFailed": "{{count}} files could not be uploaded."
+      }
+    }
+  },
+  "heatmap": {
+    "title": "Application activity",
+    "gridLabel": "Applications submitted per day",
+    "rangeLabel": "Date range",
+    "range": {
+      "lastYear": "Last 12 months"
+    },
+    "heading": {
+      "lastYear_one": "{{count}} application in the last year",
+      "lastYear_other": "{{count}} applications in the last year",
+      "year_one": "{{count}} application in {{year}}",
+      "year_other": "{{count}} applications in {{year}}"
+    },
+    "tooltip_one": "{{count}} application on {{date}}",
+    "tooltip_other": "{{count}} applications on {{date}}",
+    "tooltipEmpty": "No applications on {{date}}",
+    "missingDate_one": "{{count}} application with no recorded date",
+    "missingDate_other": "{{count}} applications with no recorded date",
+    "less": "Less",
+    "more": "More",
+    "legendLabel": "Applications per day, from less to more",
+    "weekdays": {
+      "mon": "Mon",
+      "wed": "Wed",
+      "fri": "Fri"
+    }
+  },
+  "leads": {
+    "listLabel": "Leads for this application",
+    "add": "Add lead",
+    "addTitle": "Add lead",
+    "addSubtitle": "Someone you are talking to about this role.",
+    "editTitle": "Edit lead",
+    "editSubtitle": "Update where this conversation stands.",
+    "save": "Save lead",
+    "loadError": "Could not load the leads for this application.",
+    "emptyTitle": "No leads yet",
+    "emptyDescription": "Add the recruiter, hiring manager or anyone else you are in contact with about this role.",
+    "nextAction": "Next action",
+    "nextActionDue": "Due",
+    "lastContact": "Last contact",
+    "relationship": "Relationship",
+    "footerNote": "Leads are kept with this application",
+    "fields": {
+      "name": "Name",
+      "role": "Role",
+      "company": "Company",
+      "email": "Email",
+      "phone": "Phone",
+      "linkedin": "LinkedIn URL",
+      "relationship": "Relationship",
+      "status": "Status",
+      "source": "Source",
+      "lastContact": "Last contact",
+      "nextAction": "Next action",
+      "nextActionDue": "Next action due",
+      "notes": "Notes"
+    },
+    "errors": {
+      "nameRequired": "Name is required.",
+      "emailInvalid": "Enter a valid email address."
+    },
+    "statuses": {
+      "identified": "Identified",
+      "contacted": "Contacted",
+      "replied": "Replied",
+      "meeting": "Meeting",
+      "referred": "Referred",
+      "closed": "Closed"
+    },
+    "contact": {
+      "email": "Email {{name}}",
+      "phone": "Call {{name}}",
+      "linkedin": "{{name}} on LinkedIn"
+    },
+    "messages": {
+      "addSuccess": "Lead added successfully!",
+      "addError": "Error adding the lead.",
+      "updateSuccess": "Lead saved successfully!",
+      "updateError": "Error saving the lead.",
+      "deleteSuccess": "Lead deleted successfully!",
+      "deleteError": "Error deleting the lead."
+    }
+  },
+  "jobDescription": {
+    "title": "Full job description",
+    "subtitle": "Stored from the posting link",
+    "summary": "Summary",
+    "source": "Source",
+    "textLabel": "Full job description text",
+    "characters": "{{chars}} characters",
+    "fetched": "Fetched {{date}}",
+    "emptyTitle": "No description stored yet",
+    "emptyDescription": "It is filled in from the posting URL the next time this application is refreshed.",
+    "loadError": "Could not load the stored job description.",
+    "evidenceNote": "The Description field above keeps your short evidence note. This panel shows the full posting text and never changes that field."
   }
 }

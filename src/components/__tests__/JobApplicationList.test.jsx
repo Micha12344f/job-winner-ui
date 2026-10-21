@@ -141,6 +141,18 @@ describe('JobApplicationList', () => {
     });
   });
 
+  test('shows the application heatmap above the list', async () => {
+    renderList(mocks);
+
+    await waitFor(() => {
+      expect(screen.getByText('Company A')).not.toBeNull();
+    });
+    expect(screen.getByText('Application activity')).not.toBeNull();
+    expect(
+      screen.getByRole('group', { name: 'Applications submitted per day' })
+    ).not.toBeNull();
+  });
+
   test('filters job applications based on search term', async () => {
     renderList(mocks, 'Backend');
 

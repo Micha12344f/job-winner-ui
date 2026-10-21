@@ -4,7 +4,38 @@
 const DEFAULT_DEV_FILES_URL = 'http://127.0.0.1:8081/files';
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+// Vercel caps serverless request bodies just under 4.5 MB, so anything larger
+// never reaches the proxy no matter what the sidecar accepts.
+export const VERCEL_BODY_LIMIT_BYTES = Math.floor(4.5 * 1024 * 1024);
 export const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.doc', '.txt', '.md'];
+
+// Effective per-request limit in the current environment.
+export function maxUploadBytes() {
+  return import.meta.env.PROD ? VERCEL_BODY_LIMIT_BYTES : MAX_UPLOAD_BYTES;
+}
+
+export function fileExtension(name) {
+  const clean = String(name ?? '')
+    .replace(/\\/g, '/')
+    .split('/')
+    .pop()
+    .toLowerCase();
+  const dot = clean.lastIndexOf('.');
+  return dot === -1 ? '' : clean.slice(dot);
+}
+
+// Returns null when the file can be uploaded, or a machine-readable reason the
+// caller translates: { code: 'missing' | 'empty' | 'type' | 'tooLarge', ... }.
+export function validateUploadFile(file) {
+  if (!file) return { code: 'missing' };
+  if (!file.size) return { code: 'empty' };
+  if (!ALLOWED_EXTENSIONS.includes(fileExtension(file.name))) {
+    return { code: 'type' };
+  }
+  const limitBytes = maxUploadBytes();
+  if (file.size > limitBytes) return { code: 'tooLarge', limitBytes };
+  return null;
+}
 
 export function filesBaseUrl() {
   if (import.meta.env.PROD) return '/api/files';
@@ -40,7 +71,13 @@ export async function listFiles() {
   return Array.isArray(payload.files) ? payload.files : [];
 }
 
-export async function uploadDocument({ file, label, jobApplicationId }) {
+export async function uploadDocument({
+  file,
+  label,
+  jobApplicationId,
+  category,
+  headline,
+}) {
   if (!file) throw new FilesApiError('Choose a file to upload', 400);
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new FilesApiError('File exceeds the 10 MB limit', 413);
@@ -49,6 +86,8 @@ export async function uploadDocument({ file, label, jobApplicationId }) {
   form.append('file', file);
   form.append('label', label);
   if (jobApplicationId) form.append('job_application_id', jobApplicationId);
+  if (category) form.append('category', category);
+  if (headline) form.append('headline', headline);
   const response = await fetch(`${filesBaseUrl()}/upload`, {
     method: 'POST',
     body: form,

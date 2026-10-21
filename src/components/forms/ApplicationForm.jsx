@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import {
   Grid,
@@ -23,6 +23,10 @@ import { GET_JOB_APPLICATIONS } from '../../graphql/query';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import DialogFooter from '../common/DialogFooter';
+
+// The stored full posting is a sizeable extra view, so it loads with the tab
+// instead of on every dialog open.
+const JobDescriptionPanel = lazy(() => import('../JobDescriptionPanel'));
 
 export default function ApplicationForm({
   jobApplication,
@@ -274,6 +278,15 @@ export default function ApplicationForm({
               value={formData.note}
             />
           </Grid>
+          {!isNew && jobApplication?.id && (
+            <Grid size={12}>
+              {/* The full posting stored by the backend, kept separate from
+                  the short evidence note in the description field above. */}
+              <Suspense fallback={null}>
+                <JobDescriptionPanel applicationId={jobApplication.id} />
+              </Suspense>
+            </Grid>
+          )}
         </Grid>
       </DialogContent>
       <DialogFooter>

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import Box from '@mui/material/Box';
+import DialogContent from '@mui/material/DialogContent';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import { GET_INTERVIEWS_BY_JOB_APPLICATION_ID } from '../graphql/query';
 import ApplicationForm from './forms/ApplicationForm';
@@ -10,6 +12,11 @@ import InterviewsForm from './forms/InterviewsForm';
 import OfferForm from './forms/OfferForm';
 import CustomDialog from './common/CustomDialog';
 import StatusBadge from './common/StatusBadge';
+import { listLeads } from '../api/leadsClient';
+
+// Tab bodies load with the dialog chunk only when their tab is opened, the
+// same trade-off lazyDialogs makes for the dialogs themselves.
+const LeadsForm = lazy(() => import('./forms/LeadsForm'));
 
 const TabCount = ({ value }) => (
   <Box
@@ -45,6 +52,28 @@ export default function JobApplicationDialog({
   );
   const interviewCount =
     interviewData?.allInterviewByJobApplicationId?.length ?? 0;
+
+  // Leads live in the extension API rather than GraphQL. The dialog owns the
+  // list so the tab can show its count before the tab is opened.
+  const [leads, setLeads] = useState([]);
+  const [leadsStatus, setLeadsStatus] = useState('idle');
+  useEffect(() => {
+    if (isNew || !jobApplicationId) return undefined;
+    let active = true;
+    setLeadsStatus('loading');
+    listLeads(jobApplicationId)
+      .then(rows => {
+        if (!active) return;
+        setLeads(rows);
+        setLeadsStatus('ready');
+      })
+      .catch(() => {
+        if (active) setLeadsStatus('error');
+      });
+    return () => {
+      active = false;
+    };
+  }, [isNew, jobApplicationId]);
 
   const header = isNew
     ? {
@@ -93,6 +122,19 @@ export default function JobApplicationDialog({
             }
           />
           <Tab label={t('dialogs.jobApplication.tabs.offer')} />
+          <Tab
+            label={
+              <span>
+                {t('dialogs.jobApplication.tabs.leads')}
+                {leads.length > 0 && (
+                  <>
+                    {' '}
+                    <TabCount value={leads.length} />
+                  </>
+                )}
+              </span>
+            }
+          />
         </Tabs>
       )}
       {activeTab === 0 && (
@@ -113,6 +155,26 @@ export default function JobApplicationDialog({
           jobApplicationId={jobApplicationId}
           handleClose={handleClose}
         />
+      )}
+      {activeTab === 3 && (
+        <Suspense
+          fallback={
+            <DialogContent>
+              <Typography color="text.secondary">
+                {t('common.loading')}
+              </Typography>
+            </DialogContent>
+          }
+        >
+          <LeadsForm
+            jobApplicationId={jobApplicationId}
+            leads={leads}
+            onLeadsChange={setLeads}
+            leadsLoading={leadsStatus === 'loading'}
+            leadsError={leadsStatus === 'error'}
+            handleClose={handleClose}
+          />
+        </Suspense>
       )}
     </CustomDialog>
   );

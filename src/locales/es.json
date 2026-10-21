@@ -88,7 +88,8 @@
       "tabs": {
         "application": "Solicitud",
         "interviews": "Entrevistas",
-        "offer": "Oferta"
+        "offer": "Oferta",
+        "leads": "Contactos"
       },
       "addSubtitle": "Registre un empleo al que se postuló."
     },
@@ -136,6 +137,10 @@
     "confirmInterviewDeletion": {
       "title": "Confirmar eliminación",
       "content": "¿Está seguro de que desea eliminar esta entrevista? Esta acción no se puede deshacer."
+    },
+    "confirmLeadDeletion": {
+      "title": "Eliminar contacto",
+      "content": "¿Eliminar \"{{name}}\"? Esta acción no se puede deshacer."
     }
   },
   "forms": {
@@ -270,7 +275,8 @@
     "done": "Listo",
     "deleteNamed": "¿Eliminar {{name}}?",
     "editItem": "Editar {{name}}",
-    "deleteItem": "Eliminar {{name}}"
+    "deleteItem": "Eliminar {{name}}",
+    "retry": "Reintentar"
   },
   "questionContent": {
     "messages": {
@@ -332,6 +338,143 @@
     "confirmTitle": "Eliminar documento",
     "confirmContent": "¿Eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
     "uploaded": "Subido el {{date}}",
-    "jobApplication": "Solicitud n.º {{id}}"
+    "jobApplication": "Solicitud n.º {{id}}",
+    "library": {
+      "title": "Documentos y CV",
+      "subtitle": "Sube CVs y documentos de apoyo y mantenlos organizados por categoría.",
+      "uploadTitle": "Añadir un documento",
+      "category": "Categoría",
+      "categoryHelper": "Elige una sugerencia o escribe la tuya. Por defecto: General.",
+      "headline": "Titular",
+      "headlinePlaceholder": "p. ej. CV de analista financiero sénior",
+      "chooseFiles": "Elegir archivos",
+      "filesSelected_one": "{{count}} archivo seleccionado",
+      "filesSelected_other": "{{count}} archivos seleccionados",
+      "uploadProgress": "Subiendo {{done}} de {{total}}…",
+      "listTitle": "Tus documentos",
+      "emptyTitle": "Aún no hay documentos",
+      "empty": "Sube un CV o un documento de apoyo para guardarlo con tu perfil.",
+      "untitled": "Documento sin título",
+      "docCount_one": "{{count}} documento",
+      "docCount_other": "{{count}} documentos",
+      "primaryBadge": "Principal",
+      "makePrimary": "Marcar {{name}} como principal",
+      "primarySuccess": "Documento principal actualizado.",
+      "primaryError": "No se pudo actualizar el documento principal.",
+      "edit": "Editar {{name}}",
+      "editTitle": "Editar documento",
+      "editSave": "Guardar documento",
+      "editSuccess": "Documento actualizado.",
+      "editError": "No se pudo actualizar el documento.",
+      "notes": "Notas",
+      "notesPlaceholder": "Cualquier cosa que merezca recordarse sobre este documento",
+      "deleteSuccess": "Documento eliminado.",
+      "deleteError": "No se pudo eliminar el documento.",
+      "retry": "Reintentar",
+      "errors": {
+        "missingFile": "Elige al menos un archivo para subir.",
+        "type": "{{name}} no es un tipo de archivo compatible. Usa {{allowed}}.",
+        "tooLarge": "{{name}} ocupa {{size}}, más que el límite de {{limit}} para subidas desde esta página.",
+        "empty": "{{name}} está vacío.",
+        "uploadSomeFailed": "No se pudieron subir {{count}} archivos."
+      }
+    }
+  },
+  "heatmap": {
+    "title": "Actividad de solicitudes",
+    "gridLabel": "Solicitudes enviadas por día",
+    "rangeLabel": "Rango de fechas",
+    "range": {
+      "lastYear": "Últimos 12 meses"
+    },
+    "heading": {
+      "lastYear_one": "{{count}} solicitud en el último año",
+      "lastYear_other": "{{count}} solicitudes en el último año",
+      "year_one": "{{count}} solicitud en {{year}}",
+      "year_other": "{{count}} solicitudes en {{year}}"
+    },
+    "tooltip_one": "{{count}} solicitud el {{date}}",
+    "tooltip_other": "{{count}} solicitudes el {{date}}",
+    "tooltipEmpty": "Ninguna solicitud el {{date}}",
+    "missingDate_one": "{{count}} solicitud sin fecha registrada",
+    "missingDate_other": "{{count}} solicitudes sin fecha registrada",
+    "less": "Menos",
+    "more": "Más",
+    "legendLabel": "Solicitudes por día, de menos a más",
+    "weekdays": {
+      "mon": "Lun",
+      "wed": "Mié",
+      "fri": "Vie"
+    }
+  },
+  "leads": {
+    "listLabel": "Contactos de esta solicitud",
+    "add": "Agregar contacto",
+    "addTitle": "Agregar contacto",
+    "addSubtitle": "Una persona con la que hablas sobre este puesto.",
+    "editTitle": "Editar contacto",
+    "editSubtitle": "Actualiza el estado de esta conversación.",
+    "save": "Guardar contacto",
+    "loadError": "No se pudieron cargar los contactos de esta solicitud.",
+    "emptyTitle": "Aún no hay contactos",
+    "emptyDescription": "Agrega al reclutador, al responsable de contratación o a cualquier persona con la que hables sobre este puesto.",
+    "nextAction": "Próxima acción",
+    "nextActionDue": "Vence",
+    "lastContact": "Último contacto",
+    "relationship": "Relación",
+    "footerNote": "Los contactos se guardan con esta solicitud",
+    "fields": {
+      "name": "Nombre",
+      "role": "Puesto",
+      "company": "Empresa",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "linkedin": "URL de LinkedIn",
+      "relationship": "Relación",
+      "status": "Estado",
+      "source": "Origen",
+      "lastContact": "Último contacto",
+      "nextAction": "Próxima acción",
+      "nextActionDue": "Vencimiento de la próxima acción",
+      "notes": "Notas"
+    },
+    "errors": {
+      "nameRequired": "El nombre es obligatorio.",
+      "emailInvalid": "Introduce un correo electrónico válido."
+    },
+    "statuses": {
+      "identified": "Identificado",
+      "contacted": "Contactado",
+      "replied": "Respondió",
+      "meeting": "Reunión",
+      "referred": "Referido",
+      "closed": "Cerrado"
+    },
+    "contact": {
+      "email": "Enviar correo a {{name}}",
+      "phone": "Llamar a {{name}}",
+      "linkedin": "{{name}} en LinkedIn"
+    },
+    "messages": {
+      "addSuccess": "¡Contacto agregado con éxito!",
+      "addError": "Error al agregar el contacto.",
+      "updateSuccess": "¡Contacto guardado con éxito!",
+      "updateError": "Error al guardar el contacto.",
+      "deleteSuccess": "¡Contacto eliminado con éxito!",
+      "deleteError": "Error al eliminar el contacto."
+    }
+  },
+  "jobDescription": {
+    "title": "Descripción completa del puesto",
+    "subtitle": "Guardada desde el enlace de la oferta",
+    "summary": "Resumen",
+    "source": "Fuente",
+    "textLabel": "Texto completo de la descripción del puesto",
+    "characters": "{{chars}} caracteres",
+    "fetched": "Obtenida el {{date}}",
+    "emptyTitle": "Aún no hay descripción guardada",
+    "emptyDescription": "Se completará desde la URL de la oferta la próxima vez que se actualice esta solicitud.",
+    "loadError": "No se pudo cargar la descripción guardada del puesto.",
+    "evidenceNote": "El campo Descripción de arriba conserva tu nota breve de evidencia. Este panel muestra el texto completo de la oferta y nunca modifica ese campo."
   }
 }
