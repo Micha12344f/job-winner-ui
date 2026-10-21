@@ -4,15 +4,7 @@
       <img alt="Adding an application, filtering by status, adding an interview, checking upcoming interviews, then switching to dark mode" src="readme-img/hero.gif" width="800">
 </p>
 
-## Live Demo
-
-🚀 Check out the live demo! 👉 https://jobwinner.duckdns.org
-
-✨ The data refreshes automatically every hour, so feel free to explore and test out any feature!
-
-Let me know if you'd like any further tweaks by submitting an issue!
-
-## Background
+## Production connection\n\nProduction builds send GraphQL requests to the same-origin `/api/graphql` Vercel function. Configure `JOB_WINNER_UPSTREAM_URL` (fixed HTTPS GraphQL endpoint), `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` as server-side Vercel environment variables. The proxy rejects non-POST and non-JSON requests, enforces a 1 MB request limit and an 8-second upstream timeout, and never accepts a client-supplied upstream URL. Keep deployment protection enabled; do not expose the service credentials in `VITE_*` variables.\n\nFor local UI work without a backend, use `npm run dev:mock`; the mock is development-only and is not used as a production fallback.\n\n## Background
 
 I lost my job right before the holiday season in 2022. I need to look for a new job and apply for as many as I can while all the big techs are laying off talents.
 

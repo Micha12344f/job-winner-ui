@@ -13,7 +13,9 @@ const createLink = async () =>
   import.meta.env.VITE_MOCK_API === 'true'
     ? (await import('./dev/mockApi')).createMockLink()
     : new HttpLink({
-        uri: window.APP_CONFIG?.BACKEND_URL || 'http://localhost:8080/graphql',
+        uri: import.meta.env.PROD
+          ? '/api/graphql'
+          : window.APP_CONFIG?.BACKEND_URL || 'http://localhost:8080/graphql',
       });
 
 createLink().then(link => {
