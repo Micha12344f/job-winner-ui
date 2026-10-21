@@ -10,7 +10,8 @@ export default async function handler(req, res) {
   if (!/^application\/json(?:\s*;|\s*$)/i.test(contentType)) {
     return res.status(415).json({ error: 'Unsupported content type' });
   }
-  const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
+  const body =
+    typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
   if (Buffer.byteLength(body, 'utf8') > MAX_BODY_BYTES) {
     return res.status(413).json({ error: 'Request too large' });
   }
@@ -21,23 +22,46 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'GraphQL service is not configured' });
   }
   let target;
-  try { target = new URL(upstream); } catch { return res.status(503).json({ error: 'GraphQL service is not configured' }); }
-  if (target.protocol !== 'https:' || target.username || target.password || target.search || target.hash) {
+  try {
+    target = new URL(upstream);
+  } catch {
+    return res.status(503).json({ error: 'GraphQL service is not configured' });
+  }
+  if (
+    target.protocol !== 'https:' ||
+    target.username ||
+    target.password ||
+    target.search ||
+    target.hash
+  ) {
     return res.status(503).json({ error: 'GraphQL service is not configured' });
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const response = await fetch(target.toString(), {
-      method: 'POST', body,
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'CF-Access-Client-Id': clientId, 'CF-Access-Client-Secret': clientSecret },
+      method: 'POST',
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'CF-Access-Client-Id': clientId,
+        'CF-Access-Client-Secret': clientSecret,
+      },
       signal: controller.signal,
     });
     const payload = await response.text();
     res.status(response.status);
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
+    res.setHeader(
+      'Content-Type',
+      response.headers.get('content-type') || 'application/json'
+    );
     return res.send(payload);
   } catch {
-    return res.status(502).json({ error: 'GraphQL service is temporarily unavailable' });
-  } finally { clearTimeout(timer); }
+    return res
+      .status(502)
+      .json({ error: 'GraphQL service is temporarily unavailable' });
+  } finally {
+    clearTimeout(timer);
+  }
 }
