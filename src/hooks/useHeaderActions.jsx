@@ -1,4 +1,5 @@
 import BookmarksOutlinedIcon from '@mui/icons-material/BookmarksOutlined';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
@@ -15,6 +16,7 @@ export default function useHeaderActions() {
     openInterviewList,
     openOfferList,
     openDocuments,
+    openAgentCalendar,
     interviewCount,
     offerCount,
     interviewsLoading,
@@ -53,6 +55,12 @@ export default function useHeaderActions() {
       icon: <EmojiEventsOutlinedIcon />,
       onClick: openOfferList,
       badge: offersLoading ? 0 : offerCount,
+    },
+    {
+      key: 'agents',
+      label: t('appHeader.agentCalendar'),
+      icon: <CalendarMonthOutlinedIcon />,
+      onClick: openAgentCalendar,
     },
   ];
 }

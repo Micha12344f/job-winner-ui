@@ -4,6 +4,7 @@ import { lazy } from 'react';
 // demand instead of in the initial bundle. Render them inside
 // <MountOnFirstOpen>.
 const loaders = {
+  AgentCalendarDialog: () => import('./AgentCalendarDialog'),
   JobApplicationDialog: () => import('./JobApplicationDialog'),
   FrequentUrlDialog: () => import('./FrequentUrlDialog'),
   QuestionDialog: () => import('./QuestionDialog'),
@@ -13,6 +14,7 @@ const loaders = {
   DocumentsDialog: () => import('./DocumentsDialog'),
 };
 
+export const AgentCalendarDialog = lazy(loaders.AgentCalendarDialog);
 export const JobApplicationDialog = lazy(loaders.JobApplicationDialog);
 export const FrequentUrlDialog = lazy(loaders.FrequentUrlDialog);
 export const QuestionDialog = lazy(loaders.QuestionDialog);

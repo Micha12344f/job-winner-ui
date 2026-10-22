@@ -13,7 +13,8 @@
     "interviewList": "Interview list",
     "offerList": "Offer list",
     "profile": "Profile",
-    "githubLink": "Give us a ⭐"
+    "githubLink": "Give us a ⭐",
+    "agentCalendar": "Agent calendar"
   },
   "searchBar": {
     "placeholder": "Search…"
@@ -476,5 +477,88 @@
     "emptyDescription": "It is filled in from the posting URL the next time this application is refreshed.",
     "loadError": "Could not load the stored job description.",
     "evidenceNote": "The Description field above keeps your short evidence note. This panel shows the full posting text and never changes that field."
+  },
+  "agentCalendar": {
+    "title": "Agent calendar",
+    "subtitle": "Scheduled and completed agent work, one lane per agent",
+    "gridLabel": "Agent schedule",
+    "legendLabel": "Chip legend",
+    "viewLabel": "Calendar view",
+    "view": {
+      "week": "Week",
+      "month": "Month"
+    },
+    "previous": "Previous period",
+    "next": "Next period",
+    "today": "Today",
+    "refresh": "Refresh",
+    "agentColumn": "Agent",
+    "unassigned": "Unassigned",
+    "summary": "{{runs}} recorded · {{scheduled}} scheduled",
+    "loading": "Loading agent feeds",
+    "loadError": "Could not load the agent registry from the sidecar.",
+    "partialError": "Some agent feeds could not be loaded: {{feeds}}.",
+    "feeds": {
+      "registry": "registry",
+      "schedule": "schedule",
+      "runs": "runs",
+      "health": "health"
+    },
+    "emptyAgents": {
+      "title": "No agents registered",
+      "description": "The sidecar returned an empty registry. Agents appear here once they register with their schedules."
+    },
+    "emptyWindow": "No runs or scheduled work in this period.",
+    "moreChips": "+{{count}} more",
+    "chipLabel": "{{job}} at {{time}}, {{status}}",
+    "chipLabelNoTime": "{{job}}, {{status}}",
+    "status": {
+      "ok": "Completed",
+      "failed": "Failed",
+      "incident": "Incident",
+      "running": "Running",
+      "scheduled": "Scheduled",
+      "unknown": "Unknown"
+    },
+    "legend": {
+      "ok": "Completed run",
+      "failed": "Failed run",
+      "incident": "Run with incidents",
+      "scheduled": "Scheduled"
+    },
+    "detail": {
+      "title": "Run detail",
+      "agent": "Agent",
+      "job": "Job",
+      "scheduled": "Scheduled for",
+      "status": "Status",
+      "duration": "Duration",
+      "started": "Started",
+      "finished": "Finished",
+      "error": "Error",
+      "detail": "Detail",
+      "related": "Related",
+      "none": "Not reported"
+    },
+    "health": {
+      "label": "Agent service health",
+      "sidecar": "Sidecar",
+      "cron": "Cron",
+      "session": "Session",
+      "budget": "Budget",
+      "halt": "Halt",
+      "up": "Up",
+      "down": "Down",
+      "unknown": "unknown",
+      "enabled": "enabled",
+      "paused": "paused",
+      "halted": "halted",
+      "healthy": "healthy",
+      "unhealthy": "unhealthy",
+      "remaining": "{{value}}% left",
+      "jobs_one": "{{count}} job",
+      "jobs_other": "{{count}} jobs",
+      "unavailable": "Health feed unavailable."
+    }
   }
 }

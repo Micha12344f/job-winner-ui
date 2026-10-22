@@ -9,6 +9,7 @@ import useDialog from '../hooks/useDialog';
 import { getFilteredInterviews } from '../utils/interviewUtil';
 import MountOnFirstOpen from './common/MountOnFirstOpen';
 import {
+  AgentCalendarDialog,
   DocumentsDialog,
   FrequentUrlDialog,
   InterviewListDialog,
@@ -53,6 +54,7 @@ export function AppDialogsProvider({ children }) {
   const frequentUrls = useDialog();
   const questions = useDialog();
   const documents = useDialog();
+  const agentCalendar = useDialog();
 
   const openProfile = () => {
     setProfileOpen(true);
@@ -67,6 +69,7 @@ export function AppDialogsProvider({ children }) {
     openInterviewList: () => interviewList.handleOpen(),
     openOfferList: () => offerList.handleOpen(),
     openDocuments: () => documents.handleOpen(),
+    openAgentCalendar: () => agentCalendar.handleOpen(),
     openProfile,
     profileName: [
       profileData?.profileById?.firstName,
@@ -126,6 +129,12 @@ export function AppDialogsProvider({ children }) {
         <DocumentsDialog
           open={documents.open}
           handleClose={documents.handleClose}
+        />
+      </MountOnFirstOpen>
+      <MountOnFirstOpen open={agentCalendar.open}>
+        <AgentCalendarDialog
+          open={agentCalendar.open}
+          handleClose={agentCalendar.handleClose}
         />
       </MountOnFirstOpen>
       {children}

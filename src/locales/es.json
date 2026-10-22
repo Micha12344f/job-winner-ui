@@ -13,7 +13,8 @@
     "interviewList": "Lista de entrevistas",
     "offerList": "Lista de ofertas",
     "profile": "Perfil",
-    "githubLink": "Danos una ⭐"
+    "githubLink": "Danos una ⭐",
+    "agentCalendar": "Calendario de agentes"
   },
   "searchBar": {
     "placeholder": "Buscar…"
@@ -476,5 +477,88 @@
     "emptyDescription": "Se completará desde la URL de la oferta la próxima vez que se actualice esta solicitud.",
     "loadError": "No se pudo cargar la descripción guardada del puesto.",
     "evidenceNote": "El campo Descripción de arriba conserva tu nota breve de evidencia. Este panel muestra el texto completo de la oferta y nunca modifica ese campo."
+  },
+  "agentCalendar": {
+    "title": "Calendario de agentes",
+    "subtitle": "Trabajo de agentes programado y completado, una fila por agente",
+    "gridLabel": "Agenda de agentes",
+    "legendLabel": "Leyenda de estados",
+    "viewLabel": "Vista del calendario",
+    "view": {
+      "week": "Semana",
+      "month": "Mes"
+    },
+    "previous": "Periodo anterior",
+    "next": "Periodo siguiente",
+    "today": "Hoy",
+    "refresh": "Actualizar",
+    "agentColumn": "Agente",
+    "unassigned": "Sin asignar",
+    "summary": "{{runs}} registradas · {{scheduled}} programadas",
+    "loading": "Cargando los datos de agentes",
+    "loadError": "No se pudo cargar el registro de agentes del sidecar.",
+    "partialError": "Algunos datos de agentes no se pudieron cargar: {{feeds}}.",
+    "feeds": {
+      "registry": "registro",
+      "schedule": "agenda",
+      "runs": "ejecuciones",
+      "health": "salud"
+    },
+    "emptyAgents": {
+      "title": "No hay agentes registrados",
+      "description": "El sidecar devolvió un registro vacío. Los agentes aparecerán aquí cuando se registren con sus agendas."
+    },
+    "emptyWindow": "No hay ejecuciones ni trabajo programado en este periodo.",
+    "moreChips": "+{{count}} más",
+    "chipLabel": "{{job}} a las {{time}}, {{status}}",
+    "chipLabelNoTime": "{{job}}, {{status}}",
+    "status": {
+      "ok": "Completada",
+      "failed": "Fallida",
+      "incident": "Con incidencias",
+      "running": "En curso",
+      "scheduled": "Programada",
+      "unknown": "Desconocida"
+    },
+    "legend": {
+      "ok": "Ejecución completada",
+      "failed": "Ejecución fallida",
+      "incident": "Ejecución con incidencias",
+      "scheduled": "Programada"
+    },
+    "detail": {
+      "title": "Detalle de la ejecución",
+      "agent": "Agente",
+      "job": "Tarea",
+      "scheduled": "Programada para",
+      "status": "Estado",
+      "duration": "Duración",
+      "started": "Inicio",
+      "finished": "Fin",
+      "error": "Error",
+      "detail": "Detalle",
+      "related": "Relacionado",
+      "none": "Sin datos"
+    },
+    "health": {
+      "label": "Salud del servicio de agentes",
+      "sidecar": "Sidecar",
+      "cron": "Cron",
+      "session": "Sesión",
+      "budget": "Presupuesto",
+      "halt": "Parada",
+      "up": "Activo",
+      "down": "Caído",
+      "unknown": "desconocido",
+      "enabled": "activo",
+      "paused": "en pausa",
+      "halted": "parado",
+      "healthy": "correcta",
+      "unhealthy": "incorrecta",
+      "remaining": "queda {{value}}%",
+      "jobs_one": "{{count}} tarea",
+      "jobs_other": "{{count}} tareas",
+      "unavailable": "Datos de salud no disponibles."
+    }
   }
 }
