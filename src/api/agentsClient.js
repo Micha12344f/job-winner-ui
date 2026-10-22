@@ -133,7 +133,14 @@ const feedQuery = ({ start, end } = {}) => {
 // Payloads may be a bare array or {count, items}; both are tolerated.
 function feedItems(payload) {
   if (Array.isArray(payload)) return payload;
-  return asArray(payload?.items, payload?.agents, payload?.rows, payload?.data);
+  return asArray(
+    payload?.items,
+    payload?.agents,
+    payload?.runs,
+    payload?.occurrences,
+    payload?.rows,
+    payload?.data
+  );
 }
 
 function feedCount(payload, items) {
@@ -314,7 +321,12 @@ export function normaliseOccurrences(row = {}, index = 0) {
     kind: 'occurrence',
     agentId,
     jobName,
-    detail: asString(row?.schedule, row?.expression, row?.cron, row?.kind),
+    detail: asString(
+      row?.schedule_display,
+      row?.schedule,
+      row?.expression,
+      row?.cron
+    ),
     raw: row ?? {},
   };
 
@@ -327,6 +339,7 @@ export function normaliseOccurrences(row = {}, index = 0) {
         status: 'scheduled',
         scheduledAt: isoOrEmpty(
           firstOf(
+            row?.occurrence_at,
             row?.scheduled_instant,
             row?.scheduled_at,
             row?.scheduled_for,
@@ -358,6 +371,7 @@ export function normaliseOccurrences(row = {}, index = 0) {
       status: 'scheduled',
       scheduledAt: isoOrEmpty(
         firstOf(
+          value?.occurrence_at,
           value?.scheduled_instant,
           value?.scheduled_at,
           value?.instant,
@@ -440,7 +454,16 @@ const sidecarOf = payload => {
     payload?.sidecar_up
   );
   const downTokens = ['down', 'offline', 'unreachable', 'error', 'failed'];
-  const upTokens = ['up', 'ok', 'online', 'healthy', 'running', 'degraded'];
+  // "warning"/"degraded" still mean the service answered.
+  const upTokens = [
+    'up',
+    'ok',
+    'online',
+    'healthy',
+    'running',
+    'degraded',
+    'warning',
+  ];
   return {
     up:
       upFromFlag ??
@@ -460,21 +483,38 @@ const sidecarOf = payload => {
 };
 
 const cronOf = payload => {
-  const source = [payload?.cron, payload?.cron_state, payload?.cronState].find(
-    value => value && typeof value === 'object'
-  );
+  const source = [
+    payload?.cron,
+    payload?.cron_state,
+    payload?.cronState,
+    // The live agent-ops health payload has no cron block; the counts live in
+    // `jobs` and the next/last instants sit beside them.
+    payload?.jobs,
+  ].find(value => value && typeof value === 'object');
   const pausedFlag = asBoolean(source?.paused, payload?.cron_paused);
   const enabledFlag = asBoolean(
     source?.enabled,
     source?.running,
     payload?.cron_enabled
   );
+  // Live agent-ops payloads report counts rather than flags: enabled=0 with
+  // paused>0 means paused; enabled>0 means enabled.
+  const enabledCount = asCount(source?.enabled);
+  const pausedCount = asCount(source?.paused);
+  const failedCount = asCount(source?.failing);
+  const countState =
+    pausedCount !== null && enabledCount === 0 && pausedCount > 0
+      ? 'paused'
+      : enabledCount !== null && enabledCount > 0
+        ? 'enabled'
+        : null;
+  // A failing streak outranks the enabled/paused read for the strip's tone.
   const state =
     pausedFlag === true || enabledFlag === false
       ? 'paused'
-      : pausedFlag === false || enabledFlag === true
+      : pausedFlag === false || (enabledFlag === true && failedCount === 0)
         ? 'enabled'
-        : 'unknown';
+        : (countState ?? 'unknown');
 
   return {
     state,
@@ -523,14 +563,20 @@ const sessionOf = payload => {
   );
   const downTokens = ['expired', 'invalid', 'down', 'logged_out', 'failed'];
   const upTokens = ['up', 'ok', 'valid', 'healthy', 'active', 'authenticated'];
+  // The live feed reports `not_probed` (it never calls the LinkedIn sidecar);
+  // that is a genuine unknown, not an outage, so it must not read as down.
+  const notProbed =
+    asBoolean(source?.probed) === false || status === 'not_probed';
   return {
     up:
       upFlag ??
-      (upTokens.includes(status)
-        ? true
-        : downTokens.includes(status)
-          ? false
-          : null),
+      (notProbed
+        ? null
+        : upTokens.includes(status)
+          ? true
+          : downTokens.includes(status)
+            ? false
+            : null),
     status,
   };
 };

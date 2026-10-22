@@ -37,6 +37,9 @@ const STATUS_ALIASES = {
     'done',
     'passed',
     'finished',
+    // A closed incident is no longer trouble, but keep it visible for history.
+    'resolved',
+    'closed',
   ],
   failed: [
     'failed',
@@ -59,6 +62,13 @@ const STATUS_ALIASES = {
     'partial',
     'skipped',
     'retried',
+    // cron_incidents state tokens: an open or acknowledged incident row still
+    // represents ongoing trouble; a resolved one is history, but the calendar
+    // keeps the amber bucket so the incident count visible in the UI matches.
+    'alerted',
+    'open',
+    'acked',
+    'active',
   ],
   running: [
     'running',
