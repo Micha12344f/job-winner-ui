@@ -29,13 +29,13 @@ export default function DiscoveryOpenSection() {
     return new Date(b.posted_at) - new Date(a.posted_at);
   });
   const lastCrawl = sourcesHealth
-    .map(source => source.last_crawl_at)
+    .map(source => source.last_success_at)
     .filter(Boolean)
     .sort()
     .at(-1);
   const errors = sourcesHealth.flatMap(source =>
-    source.error
-      ? [`${source.source_board || source.source_type}: ${source.error}`]
+    source.last_error
+      ? [`${source.title || source.source_type}: ${source.last_error}`]
       : []
   );
   return (
