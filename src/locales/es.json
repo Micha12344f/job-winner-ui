@@ -560,5 +560,32 @@
       "jobs_other": "{{count}} tareas",
       "unavailable": "Datos de salud no disponibles."
     }
+  },
+  "discovery": {
+    "openTab": "Descubrimiento",
+    "applicationsTab": "Solicitudes",
+    "sections": "Secciones de empleo",
+    "sourcesHealth": "Estado de las fuentes",
+    "lastCrawl": "Último rastreo: {{date}}",
+    "never": "Nunca",
+    "crawlNow": "Rastrear ahora",
+    "refresh": "Actualizar",
+    "loadError": "No se pudieron cargar los empleos encontrados.",
+    "emptyTitle": "No se encontraron empleos abiertos",
+    "emptyDescription": "Aquí aparecerán los empleos rastreados de tus sitios guardados.",
+    "unknownDate": "Fecha desconocida",
+    "unknownCompany": "Empresa no indicada",
+    "locationUnknown": "Ubicación no indicada",
+    "source": "Fuente",
+    "posted": "Publicado {{date}} ({{precision}})",
+    "precisionUnknown": "precisión desconocida",
+    "closes": "Cierra {{date}}",
+    "score": "Puntuación: {{score}}",
+    "openLink": "Abrir enlace",
+    "dismiss": "Descartar",
+    "markApplied": "Marcar como solicitado",
+    "dismissTitle": "¿Descartar este empleo?",
+    "dismissConfirm": "¿Descartar “{{title}}” de la lista de empleos abiertos?",
+    "applicationIdPrompt": "Introduce el ID de solicitud para vincular este empleo:"
   }
 }

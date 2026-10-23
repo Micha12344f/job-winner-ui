@@ -560,5 +560,32 @@
       "jobs_other": "{{count}} jobs",
       "unavailable": "Health feed unavailable."
     }
+  },
+  "discovery": {
+    "openTab": "Open discovery",
+    "applicationsTab": "Applications",
+    "sections": "Job sections",
+    "sourcesHealth": "Source health",
+    "lastCrawl": "Last crawl: {{date}}",
+    "never": "Never",
+    "crawlNow": "Crawl now",
+    "refresh": "Refresh",
+    "loadError": "Could not load discovered jobs.",
+    "emptyTitle": "No open jobs found",
+    "emptyDescription": "Crawled jobs from your bookmarked websites will appear here.",
+    "unknownDate": "Date unknown",
+    "unknownCompany": "Company not listed",
+    "locationUnknown": "Location not listed",
+    "source": "Source",
+    "posted": "Posted {{date}} ({{precision}})",
+    "precisionUnknown": "precision unknown",
+    "closes": "Closes {{date}}",
+    "score": "Score: {{score}}",
+    "openLink": "Open link",
+    "dismiss": "Dismiss",
+    "markApplied": "Mark applied",
+    "dismissTitle": "Dismiss this job?",
+    "dismissConfirm": "Dismiss “{{title}}” from the open queue?",
+    "applicationIdPrompt": "Enter the application ID to link this job:"
   }
 }
