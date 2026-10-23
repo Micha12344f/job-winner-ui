@@ -587,5 +587,20 @@
     "dismissTitle": "Dismiss this job?",
     "dismissConfirm": "Dismiss “{{title}}” from the open queue?",
     "applicationIdPrompt": "Enter the application ID to link this job:"
+  },
+  "relationships": {
+    "tab": "Relationships",
+    "refresh": "Refresh",
+    "summary": "{{companies}} companies, {{contacts}} contacts",
+    "loadError": "Could not load relationships.",
+    "emptyTitle": "No relationships yet",
+    "emptyDescription": "Recruiters, hiring managers, and company contacts will appear here.",
+    "unknownRelationship": "Unknown",
+    "nextAction": "Next action",
+    "showTimeline": "Show timeline",
+    "hideTimeline": "Hide timeline",
+    "noInteractions": "No interactions recorded.",
+    "delete": "Delete",
+    "standalone": "Standalone contacts"
   }
 }

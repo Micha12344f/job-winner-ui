@@ -6,10 +6,12 @@ import App from './App';
 import AppHeader from './components/AppHeader';
 import JobApplicationList from './components/JobApplicationList';
 import DiscoveryOpenSection from './components/DiscoveryOpenSection';
+import RelationshipsView from './components/RelationshipsView';
 
 vi.mock('./components/AppHeader');
 vi.mock('./components/JobApplicationList');
 vi.mock('./components/DiscoveryOpenSection');
+vi.mock('./components/RelationshipsView');
 
 it('Should render discovery open section on default route', async () => {
   AppHeader.mockImplementation(() => <div>AppHeaderMock</div>);
@@ -19,6 +21,7 @@ it('Should render discovery open section on default route', async () => {
   DiscoveryOpenSection.mockImplementation(() => (
     <div>DiscoveryOpenSectionMock</div>
   ));
+  RelationshipsView.mockImplementation(() => <div>RelationshipsViewMock</div>);
   render(
     <MockedProvider mocks={[]}>
       <MemoryRouter>
@@ -38,6 +41,7 @@ it('Should render job application list when Applications tab is selected', async
   DiscoveryOpenSection.mockImplementation(() => (
     <div>DiscoveryOpenSectionMock</div>
   ));
+  RelationshipsView.mockImplementation(() => <div>RelationshipsViewMock</div>);
   render(
     <MockedProvider mocks={[]}>
       <MemoryRouter>

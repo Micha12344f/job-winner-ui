@@ -587,5 +587,20 @@
     "dismissTitle": "¿Descartar este empleo?",
     "dismissConfirm": "¿Descartar “{{title}}” de la lista de empleos abiertos?",
     "applicationIdPrompt": "Introduce el ID de solicitud para vincular este empleo:"
+  },
+  "relationships": {
+    "tab": "Relaciones",
+    "refresh": "Actualizar",
+    "summary": "{{companies}} empresas, {{contacts}} contactos",
+    "loadError": "No se pudieron cargar las relaciones.",
+    "emptyTitle": "Sin relaciones",
+    "emptyDescription": "Aqui apareceran reclutadores y contactos de empresas.",
+    "unknownRelationship": "Desconocido",
+    "nextAction": "Proxima accion",
+    "showTimeline": "Mostrar historial",
+    "hideTimeline": "Ocultar historial",
+    "noInteractions": "Sin interacciones registradas.",
+    "delete": "Eliminar",
+    "standalone": "Contactos independientes"
   }
 }

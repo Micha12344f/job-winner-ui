@@ -8,6 +8,7 @@ import AppHeader from './components/AppHeader';
 import { AppDialogsProvider } from './components/AppDialogsContext';
 import DiscoveryOpenSection from './components/DiscoveryOpenSection';
 import JobApplicationList from './components/JobApplicationList';
+import RelationshipsView from './components/RelationshipsView';
 import { prefetchDialogs } from './components/lazyDialogs';
 import { SnackbarProvider } from './components/common/SnackbarContext';
 import { ThemeContextProvider } from './components/ThemeContext';
@@ -36,15 +37,18 @@ function App() {
             >
               <Tab label={t('discovery.openTab')} />
               <Tab label={t('discovery.applicationsTab')} />
+              <Tab label={t('relationships.tab')} />
             </Tabs>
           </Box>
           {section === 0 ? (
             <DiscoveryOpenSection />
-          ) : (
+          ) : section === 1 ? (
             <JobApplicationList
               searchTerm={searchTerm}
               onClearSearch={() => setSearchTerm('')}
             />
+          ) : (
+            <RelationshipsView />
           )}
         </AppDialogsProvider>
       </SnackbarProvider>
