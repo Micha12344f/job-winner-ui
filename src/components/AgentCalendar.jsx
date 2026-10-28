@@ -14,7 +14,6 @@ import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
@@ -28,7 +27,6 @@ import {
 } from '../api/agentsClient';
 import { statusColor } from '../config/status';
 import {
-  CALENDAR_VIEWS,
   DATE_KEY,
   DAY_HOURS,
   RUN_STATUS_TONE,
@@ -38,7 +36,6 @@ import {
   dayHeading,
   dayKeyOf,
   formatTime,
-  groupByAgentAndDay,
   groupByAgentAndHour,
   hourLabel,
   mergeFeedItems,
@@ -52,9 +49,8 @@ import { createScheduleException } from '../api/agentsClient';
 import AgentRunDrawer from './AgentRunDrawer';
 import EmptyState from './common/EmptyState';
 
-// Chips per day cell before the "+N" overflow. Week days are wide enough for
-// three labelled chips; month days only fit the compact time chips.
-const MAX_CHIPS = { day: 3, week: 3, month: 2 };
+// Chips per hour cell before the "+N" overflow.
+const MAX_CHIPS = 3;
 
 // Memoised so refetches only repaint chips whose data moved.
 const AgentChip = memo(function AgentChip({ item, label, compact, onSelect }) {
@@ -139,16 +135,10 @@ function LegendSwatch({ status, kind }) {
  * chips for recorded runs, hollow outlines for projected schedule occurrences,
  * and a drawer with the full detail of whatever is clicked.
  */
-export default function AgentCalendar({
-  today = new Date(),
-  now: nowProp,
-  defaultView = 'day',
-}) {
+export default function AgentCalendar({ today = new Date(), now: nowProp }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language || 'en';
-  const [view, setView] = useState(
-    CALENDAR_VIEWS.includes(defaultView) ? defaultView : 'day'
-  );
+  // One period only: the 24 hours of a single day.
   const [anchor, setAnchor] = useState(() => dayjs(today));
   // Live clock for the current-time rule. A caller can pin it (tests, or a
   // screenshot) by passing `now`; otherwise it ticks once a minute.
@@ -173,8 +163,8 @@ export default function AgentCalendar({
   const [actionError, setActionError] = useState('');
 
   const period = useMemo(
-    () => buildCalendarWindow({ view, anchor }),
-    [view, anchor]
+    () => buildCalendarWindow({ view: 'day', anchor }),
+    [anchor]
   );
 
   // One refetch per visible window, retry, or view change. Each feed settles
@@ -247,17 +237,10 @@ export default function AgentCalendar({
     () => mergeFeedItems({ runs: feeds.runs, occurrences: feeds.occurrences }),
     [feeds]
   );
-  const isDayView = view === 'day';
-  const groups = useMemo(
-    () =>
-      isDayView
-        ? groupByAgentAndHour(items, '')
-        : groupByAgentAndDay(items, ''),
-    [items, isDayView]
-  );
-  const columns = isDayView ? DAY_HOURS : period.days;
+  const groups = useMemo(() => groupByAgentAndHour(items, ''), [items]);
+  const columns = DAY_HOURS;
   const laneMin = 120;
-  const columnMin = isDayView ? 46 : view === 'week' ? 68 : 34;
+  const columnMin = 46;
   const gridTemplate = `minmax(${laneMin}px, 168px) repeat(${columns.length}, minmax(${columnMin}px, 1fr))`;
   const summary = summariseWindow({
     runs: feeds.runs,
@@ -268,9 +251,7 @@ export default function AgentCalendar({
   // Current-time rule: only meaningful on the actual current day.
   const nowKey = dayKeyOf(clock);
   const showNowLine =
-    isDayView &&
-    nowKey === todayKey &&
-    period.start.format(DATE_KEY) === nowKey;
+    nowKey === todayKey && period.start.format(DATE_KEY) === nowKey;
   const nowHour = clock.hour();
   const nowOffset = (clock.minute() * 60 + clock.second()) / 3600;
   const showSkeleton = loading && lanes.length === 0 && items.length === 0;
@@ -312,11 +293,7 @@ export default function AgentCalendar({
     const job =
       item.jobName || t(`agentCalendar.status.${item.status ?? 'unknown'}`);
     const time = formatTime(item.scheduledAt, language);
-    if (isDayView) {
-      return time
-        ? t('agentCalendar.dayChipLabel', { job, time })
-        : t('agentCalendar.chipLabelNoTime', { job, status });
-    }
+    if (time) return t('agentCalendar.dayChipLabel', { job, time });
     return time
       ? t('agentCalendar.chipLabel', { job, time, status })
       : t('agentCalendar.chipLabelNoTime', { job, status });
@@ -366,41 +343,13 @@ export default function AgentCalendar({
           </Typography>
         </Box>
 
-        <Box
-          role="group"
-          aria-label={t('agentCalendar.viewLabel')}
-          sx={{ display: 'flex', gap: 1 }}
-        >
-          {CALENDAR_VIEWS.map(option => {
-            const active = option === view;
-            return (
-              <Chip
-                key={option}
-                clickable
-                size="small"
-                aria-pressed={active}
-                label={t(`agentCalendar.view.${option}`)}
-                onClick={() => setView(option)}
-                sx={{
-                  border: 1,
-                  borderColor: active ? 'primary.main' : 'divider',
-                  bgcolor: active ? 'primary.main' : 'transparent',
-                  color: active ? 'primary.contrastText' : 'text.secondary',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: active ? 'primary.main' : 'action.hover',
-                  },
-                }}
-              />
-            );
-          })}
-        </Box>
-
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <IconButton
             size="small"
             aria-label={t('agentCalendar.previous')}
-            onClick={() => setAnchor(current => shiftAnchor(current, view, -1))}
+            onClick={() =>
+              setAnchor(current => shiftAnchor(current, 'day', -1))
+            }
           >
             <ChevronLeftRoundedIcon fontSize="small" />
           </IconButton>
@@ -414,7 +363,7 @@ export default function AgentCalendar({
           <IconButton
             size="small"
             aria-label={t('agentCalendar.next')}
-            onClick={() => setAnchor(current => shiftAnchor(current, view, 1))}
+            onClick={() => setAnchor(current => shiftAnchor(current, 'day', 1))}
           >
             <ChevronRightRoundedIcon fontSize="small" />
           </IconButton>
@@ -483,7 +432,7 @@ export default function AgentCalendar({
           <Box
             sx={{
               position: 'relative',
-              minWidth: isDayView ? 1272 : view === 'week' ? 660 : 900,
+              minWidth: 1272,
             }}
           >
             <Box
@@ -617,7 +566,7 @@ export default function AgentCalendar({
                       ? `${period.start.format(DATE_KEY)}|${hourLabel(day)}`
                       : day.format(DATE_KEY);
                     const cellItems = groups.get(`${agent.id}|${key}`) ?? [];
-                    const visible = cellItems.slice(0, MAX_CHIPS[view]);
+                    const visible = cellItems.slice(0, MAX_CHIPS);
                     const overflow = cellItems.length - visible.length;
                     return (
                       <Box
@@ -631,14 +580,14 @@ export default function AgentCalendar({
                           display: 'flex',
                           flexDirection: 'column',
                           gap: 0.25,
-                          minHeight: isDayView ? 44 : view === 'week' ? 48 : 40,
+                          minHeight: 44,
                         }}
                       >
                         {visible.map(item => (
                           <AgentChip
                             key={item.id}
                             item={item}
-                            compact={isDayView || view === 'month'}
+                            compact
                             label={labelFor(item)}
                             onSelect={selectItem}
                           />

@@ -99,15 +99,10 @@ test.describe('agent calendar', () => {
     const calendar = dialog(page, 'Agent calendar');
     await expect(calendar).toBeVisible();
 
-    // Day view is the default: 24 hourly columns for the fixture's "today".
+    // The calendar is one 24-hour period: no week/month switcher.
     await expect(calendar.locator('[data-day-heading]')).toHaveCount(24);
-    await expect(calendar.locator('[data-lane]')).toHaveCount(2);
-    await expect(
-      calendar.getByRole('button', { name: 'Poll job inbox at 08:00' })
-    ).toBeVisible();
-
-    await calendar.getByRole('button', { name: 'Week' }).click();
-    await expect(calendar.getByText('15 – 21 Jun 2026')).toBeVisible();
+    await expect(calendar.getByText('15 June 2026')).toBeVisible();
+    await expect(calendar.getByRole('button', { name: 'Week' })).toHaveCount(0);
 
     // Registry order drives one swimlane per agent.
     const lanes = calendar.locator('[data-lane]');
@@ -115,18 +110,12 @@ test.describe('agent calendar', () => {
     await expect(lanes.first()).toContainText('job-radar-agent');
 
     const completed = calendar.getByRole('button', {
-      name: 'Poll job inbox at 08:00, Completed',
+      name: 'Poll job inbox at 08:00',
     });
     await expect(completed).toHaveAttribute('data-variant', 'solid');
 
-    const scheduled = calendar.getByRole('button', {
-      name: 'Score pipeline at 11:00, Scheduled',
-    });
-    await expect(scheduled).toHaveAttribute('data-variant', 'outline');
     await expect(
-      calendar.getByRole('button', {
-        name: 'Session health check at 09:30, Failed',
-      })
+      calendar.getByRole('button', { name: 'Session health check at 09:30' })
     ).toHaveAttribute('data-variant', 'solid');
   });
 
@@ -152,11 +141,8 @@ test.describe('agent calendar', () => {
 
     await page.getByRole('button', { name: 'Agent calendar' }).click();
     await settle(page);
-    await dialog(page, 'Agent calendar')
-      .getByRole('button', { name: 'Week' })
-      .click();
     await page
-      .getByRole('button', { name: 'Session health check at 09:30, Failed' })
+      .getByRole('button', { name: 'Session health check at 09:30' })
       .click();
 
     const drawer = page.getByRole('dialog', { name: 'Session health check' });
@@ -172,22 +158,21 @@ test.describe('agent calendar', () => {
     await expect(drawer).toBeHidden();
   });
 
-  test('switches to the month view and reaches July', async ({ page }) => {
+  test('steps one day at a time and returns to today', async ({ page }) => {
     await stubAgentFeeds(page);
     await openApp(page);
 
     await page.getByRole('button', { name: 'Agent calendar' }).click();
     await settle(page);
     const calendar = dialog(page, 'Agent calendar');
-    await calendar.getByRole('button', { name: 'Month' }).click();
-    // Day and week stay one click away.
-    await expect(calendar.getByText('June 2026')).toBeVisible();
-    await expect(calendar.locator('[data-day-heading]')).toHaveCount(30);
+    await expect(calendar.getByText('15 June 2026')).toBeVisible();
 
     await calendar.getByRole('button', { name: 'Next period' }).click();
-    await expect(calendar.getByText('July 2026')).toBeVisible();
+    await expect(calendar.getByText('16 June 2026')).toBeVisible();
+    await expect(calendar.locator('[data-day-heading]')).toHaveCount(24);
+
     await calendar.getByRole('button', { name: 'Today' }).click();
-    await expect(calendar.getByText('June 2026')).toBeVisible();
+    await expect(calendar.getByText('15 June 2026')).toBeVisible();
   });
 
   test('explains an empty registry instead of drawing empty lanes', async ({

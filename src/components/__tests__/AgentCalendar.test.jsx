@@ -39,9 +39,9 @@ const run = (overrides = {}) => ({
   agentId: 'radar',
   jobName: 'Poll job inbox',
   status: 'ok',
-  scheduledAt: '2026-10-20T09:00:00',
-  startedAt: '2026-10-20T09:00:00',
-  finishedAt: '2026-10-20T09:00:01',
+  scheduledAt: '2026-10-21T09:00:00',
+  startedAt: '2026-10-21T09:00:00',
+  finishedAt: '2026-10-21T09:00:02',
   durationMs: 1200,
   error: '',
   detail: '',
@@ -56,7 +56,7 @@ const occurrence = (overrides = {}) => ({
   agentId: 'radar',
   jobName: 'Score pipeline',
   status: 'scheduled',
-  scheduledAt: '2026-10-23T11:00:00',
+  scheduledAt: '2026-10-21T11:00:00',
   startedAt: '',
   finishedAt: '',
   durationMs: null,
@@ -83,10 +83,10 @@ const health = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderCalendar = ({ view = 'week', ...props } = {}) =>
+const renderCalendar = (props = {}) =>
   render(
     <ThemeContextProvider>
-      <AgentCalendar today={TODAY} defaultView={view} {...props} />
+      <AgentCalendar today={TODAY} {...props} />
     </ThemeContextProvider>
   );
 
@@ -122,7 +122,7 @@ describe('AgentCalendar', () => {
         ],
       });
       getAgentSchedule.mockResolvedValue({ count: 0, items: [] });
-      const { container } = renderCalendar({ view: 'day' });
+      const { container } = renderCalendar();
 
       await screen.findByText('job-radar-agent');
 
@@ -155,25 +155,19 @@ describe('AgentCalendar', () => {
       expect(screen.getByText('10:30')).toBeInTheDocument();
       unmount();
 
-      renderCalendar({ view: 'day', now: new Date(2026, 9, 22, 10, 30, 0) });
+      renderCalendar({ now: new Date(2026, 9, 22, 10, 30, 0) });
       await screen.findByText('job-radar-agent');
       expect(
         screen.queryByTestId('agent-calendar-now-line')
       ).not.toBeInTheDocument();
     });
 
-    it('opens on the hourly view by default', async () => {
-      const { container } = render(
-        <ThemeContextProvider>
-          <AgentCalendar today={TODAY} now={new Date(2026, 9, 21, 12, 0, 0)} />
-        </ThemeContextProvider>
-      );
+    it('renders only the 24 hour columns', async () => {
+      const { container } = renderCalendar();
+
       await screen.findByText('job-radar-agent');
-      expect(screen.getByRole('button', { name: 'Day' })).toHaveAttribute(
-        'aria-pressed',
-        'true'
-      );
       expect(container.querySelectorAll('[data-day-heading]')).toHaveLength(24);
+      expect(screen.getByText('21 October 2026')).toBeInTheDocument();
     });
   });
 
@@ -275,7 +269,7 @@ describe('AgentCalendar', () => {
       expect(screen.getByText('agent-ops-monitor')).toBeInTheDocument();
       expect(container.querySelectorAll('[data-lane]')).toHaveLength(2);
       expect(chips(container)).toHaveLength(2);
-      expect(screen.getByText('19 – 25 Oct 2026')).toBeInTheDocument();
+      expect(screen.getByText('21 October 2026')).toBeInTheDocument();
       expect(screen.getByText('1 recorded · 1 scheduled')).toBeInTheDocument();
     });
 
@@ -311,12 +305,12 @@ describe('AgentCalendar', () => {
 
       expect(
         await screen.findByRole('button', {
-          name: 'Poll job inbox at 09:00, Completed',
+          name: 'Poll job inbox at 09:00',
         })
       ).toBeInTheDocument();
       expect(
         screen.getByRole('button', {
-          name: 'Score pipeline at 11:00, Scheduled',
+          name: 'Score pipeline at 11:00',
         })
       ).toBeInTheDocument();
     });
@@ -384,7 +378,7 @@ describe('AgentCalendar', () => {
       expect(container.querySelector('[data-lane="tracker"]')).not.toBeNull();
       expect(
         screen.getByRole('button', {
-          name: 'Reconcile statuses at 09:00, Completed',
+          name: 'Reconcile statuses at 09:00',
         })
       ).toBeInTheDocument();
     });
@@ -427,7 +421,7 @@ describe('AgentCalendar', () => {
       expect(chips(container)).toHaveLength(1);
       expect(
         screen.getByRole('button', {
-          name: 'Poll job inbox at 09:00, Completed',
+          name: 'Poll job inbox at 09:00',
         })
       ).toBeInTheDocument();
     });
@@ -519,8 +513,8 @@ describe('AgentCalendar', () => {
         items: [
           run({
             status: 'failed',
-            startedAt: '2026-10-20T09:00:00',
-            finishedAt: '2026-10-20T09:01:05',
+            startedAt: '2026-10-21T09:00:00',
+            finishedAt: '2026-10-21T09:01:05',
             durationMs: 65_000,
             error: 'LinkedIn session expired',
             detail: 'scanned 12 jobs',
@@ -534,7 +528,7 @@ describe('AgentCalendar', () => {
 
       await user.click(
         await screen.findByRole('button', {
-          name: 'Poll job inbox at 09:00, Failed',
+          name: 'Poll job inbox at 09:00',
         })
       );
 
@@ -545,7 +539,7 @@ describe('AgentCalendar', () => {
       expect(within(drawer).getByText('job-radar-agent')).toBeInTheDocument();
       // The instant is shown as "scheduled for" and, when reported, "started".
       expect(
-        within(drawer).getAllByText('20 Oct 2026, 09:00').length
+        within(drawer).getAllByText('21 Oct 2026, 09:00').length
       ).toBeGreaterThan(0);
       // Status appears as the chip and as the detail row.
       expect(within(drawer).getAllByText('Failed').length).toBeGreaterThan(0);
@@ -568,7 +562,7 @@ describe('AgentCalendar', () => {
 
       await user.click(
         await screen.findByRole('button', {
-          name: 'Score pipeline at 11:00, Scheduled',
+          name: 'Score pipeline at 11:00',
         })
       );
 
@@ -585,47 +579,30 @@ describe('AgentCalendar', () => {
     });
   });
 
-  describe('views', () => {
-    it('switches between week and month, refetching the visible window', async () => {
+  describe('period', () => {
+    it('shows one 24-hour period and no view switcher', async () => {
+      const { container } = renderCalendar();
+
+      await screen.findByText('job-radar-agent');
+      expect(container.querySelectorAll('[data-day-heading]')).toHaveLength(24);
+      expect(screen.queryByRole('button', { name: 'Week' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Month' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Day' })).toBeNull();
+    });
+
+    it('steps a day at a time and returns to today', async () => {
       const user = userEvent.setup();
       const { container } = renderCalendar();
 
       await screen.findByText('job-radar-agent');
-      expect(container.querySelectorAll('[data-day-heading]')).toHaveLength(7);
-      expect(screen.getByRole('button', { name: 'Week' })).toHaveAttribute(
-        'aria-pressed',
-        'true'
-      );
-
-      await user.click(screen.getByRole('button', { name: 'Month' }));
-
-      await waitFor(() =>
-        expect(container.querySelectorAll('[data-day-heading]')).toHaveLength(
-          31
-        )
-      );
-      expect(screen.getByText('October 2026')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Month' })).toHaveAttribute(
-        'aria-pressed',
-        'true'
-      );
-      // Both chips still land in October.
-      expect(chips(container)).toHaveLength(2);
-      await waitFor(() => expect(getAgentRuns).toHaveBeenCalledTimes(2));
-    });
-
-    it('steps the period and returns to today', async () => {
-      const user = userEvent.setup();
-      renderCalendar();
-
-      await screen.findByText('job-radar-agent');
       await user.click(screen.getByRole('button', { name: 'Next period' }));
-      expect(
-        await screen.findByText('26 Oct – 1 Nov 2026')
-      ).toBeInTheDocument();
+      expect(await screen.findByText('22 October 2026')).toBeInTheDocument();
+      // Tomorrow holds none of today's chips.
+      expect(chips(container)).toHaveLength(0);
 
       await user.click(screen.getByRole('button', { name: 'Today' }));
-      expect(await screen.findByText('19 – 25 Oct 2026')).toBeInTheDocument();
+      expect(await screen.findByText('21 October 2026')).toBeInTheDocument();
+      expect(chips(container)).toHaveLength(2);
     });
   });
 
@@ -639,11 +616,8 @@ describe('AgentCalendar', () => {
         screen.getByText('1 registradas · 1 programadas')
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: 'Semana' })
-      ).toBeInTheDocument();
-      expect(
         screen.getByRole('button', {
-          name: 'Poll job inbox a las 09:00, Completada',
+          name: 'Poll job inbox a las 09:00',
         })
       ).toBeInTheDocument();
     });
