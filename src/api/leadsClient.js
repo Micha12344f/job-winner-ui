@@ -104,6 +104,14 @@ export async function listLeads(applicationId) {
   return Array.isArray(payload?.items) ? payload.items : [];
 }
 
+// Every stored lead, used by the Relationships view to group contacts under
+// the applications they are actually attached to. The API caps page size, so
+// this asks for the documented maximum in one call.
+export async function listAllLeads() {
+  const payload = await request('/leads?limit=500');
+  return Array.isArray(payload?.items) ? payload.items : [];
+}
+
 export async function createLead(applicationId, values) {
   const payload = leadPayload(values);
   return request('/leads', {
