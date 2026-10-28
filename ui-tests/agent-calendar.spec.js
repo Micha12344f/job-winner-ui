@@ -98,6 +98,15 @@ test.describe('agent calendar', () => {
     await settle(page);
     const calendar = dialog(page, 'Agent calendar');
     await expect(calendar).toBeVisible();
+
+    // Day view is the default: 24 hourly columns for the fixture's "today".
+    await expect(calendar.locator('[data-day-heading]')).toHaveCount(24);
+    await expect(calendar.locator('[data-lane]')).toHaveCount(2);
+    await expect(
+      calendar.getByRole('button', { name: 'Poll job inbox at 08:00' })
+    ).toBeVisible();
+
+    await calendar.getByRole('button', { name: 'Week' }).click();
     await expect(calendar.getByText('15 – 21 Jun 2026')).toBeVisible();
 
     // Registry order drives one swimlane per agent.
@@ -143,6 +152,9 @@ test.describe('agent calendar', () => {
 
     await page.getByRole('button', { name: 'Agent calendar' }).click();
     await settle(page);
+    await dialog(page, 'Agent calendar')
+      .getByRole('button', { name: 'Week' })
+      .click();
     await page
       .getByRole('button', { name: 'Session health check at 09:30, Failed' })
       .click();
@@ -168,6 +180,7 @@ test.describe('agent calendar', () => {
     await settle(page);
     const calendar = dialog(page, 'Agent calendar');
     await calendar.getByRole('button', { name: 'Month' }).click();
+    // Day and week stay one click away.
     await expect(calendar.getByText('June 2026')).toBeVisible();
     await expect(calendar.locator('[data-day-heading]')).toHaveCount(30);
 
