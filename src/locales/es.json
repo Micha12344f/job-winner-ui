@@ -601,6 +601,7 @@
     "unknownCompany": "Empresa desconocida",
     "appliedOn": "Solicitado {{date}}",
     "appliedDateUnknown": "Fecha de solicitud no registrada",
+    "contactCount": "{{count}} contactos",
     "lastContact": "Ultimo contacto {{date}}",
     "openProfile": "Abrir perfil",
     "nextAction": "Proxima accion",

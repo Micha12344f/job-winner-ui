@@ -601,6 +601,7 @@
     "unknownCompany": "Unknown company",
     "appliedOn": "Applied {{date}}",
     "appliedDateUnknown": "Applied date not recorded",
+    "contactCount": "{{count}} contacts",
     "lastContact": "Last contact {{date}}",
     "openProfile": "Open profile",
     "nextAction": "Next action",

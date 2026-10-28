@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import i18n from '../../i18n';
 import { GET_ALL_INTERVIEWS, GET_JOB_APPLICATIONS } from '../../graphql/query';
@@ -57,13 +58,32 @@ function mockData({ applications = [], interviews = [], leads = [] }) {
   listAllLeads.mockResolvedValue(leads);
 }
 
+const renderView = () =>
+  render(
+    <ThemeContextProvider>
+      <RelationshipsView />
+    </ThemeContextProvider>
+  );
+
+// Contacts sit behind a per-job dropdown, so a test that asserts on a contact
+// has to open that job's row first.
+const openJob = async company => {
+  const summary = await screen.findByRole('button', {
+    name: new RegExp(company),
+  });
+  expect(summary.getAttribute('aria-expanded')).toBe('false');
+  await userEvent.click(summary);
+  expect(summary.getAttribute('aria-expanded')).toBe('true');
+  return summary;
+};
+
 beforeEach(async () => {
   vi.clearAllMocks();
   await i18n.changeLanguage('en');
 });
 
 describe('RelationshipsView', () => {
-  test('shows leads attached to an applied job', async () => {
+  test('reveals contacts when the job row is opened', async () => {
     mockData({
       applications: [
         application({ id: '1', appliedDate: '2026-10-22', status: 'active' }),
@@ -71,15 +91,15 @@ describe('RelationshipsView', () => {
       leads: [lead({ id: 10, application_id: 1, name: 'Jane Recruiter' })],
     });
 
-    render(
-      <ThemeContextProvider>
-        <RelationshipsView />
-      </ThemeContextProvider>
-    );
+    renderView();
+
+    expect(await screen.findByText('Finance Analyst')).not.toBeNull();
+    expect(screen.getByText('Applied 2026-10-22')).not.toBeNull();
+
+    await openJob('Acme');
 
     expect(await screen.findByText('Jane Recruiter')).not.toBeNull();
-    expect(screen.getByText('Finance Analyst')).not.toBeNull();
-    expect(screen.getByText('Applied 2026-10-22')).not.toBeNull();
+    expect(screen.getByText('1 contacts')).not.toBeNull();
   });
 
   test('hides leads on jobs with no submission evidence', async () => {
@@ -90,11 +110,7 @@ describe('RelationshipsView', () => {
       leads: [lead({ id: 10, application_id: 1, name: 'Unsubmitted Contact' })],
     });
 
-    render(
-      <ThemeContextProvider>
-        <RelationshipsView />
-      </ThemeContextProvider>
-    );
+    renderView();
 
     await waitFor(() =>
       expect(screen.queryByText('Unsubmitted Contact')).toBeNull()
@@ -114,15 +130,17 @@ describe('RelationshipsView', () => {
       ],
     });
 
-    render(
-      <ThemeContextProvider>
-        <RelationshipsView />
-      </ThemeContextProvider>
-    );
+    renderView();
+
+    expect(
+      await screen.findAllByText('Applied date not recorded')
+    ).toHaveLength(2);
+
+    await openJob('Beta');
+    await openJob('Gamma');
 
     expect(await screen.findByText('Rejected Contact')).not.toBeNull();
     expect(screen.getByText('Ghosted Contact')).not.toBeNull();
-    expect(screen.getAllByText('Applied date not recorded')).toHaveLength(2);
   });
 
   test('counts a job as applied when an interview was recorded', async () => {
@@ -141,11 +159,9 @@ describe('RelationshipsView', () => {
       leads: [lead({ id: 13, application_id: 4, name: 'Interviewed Contact' })],
     });
 
-    render(
-      <ThemeContextProvider>
-        <RelationshipsView />
-      </ThemeContextProvider>
-    );
+    renderView();
+
+    await openJob('Delta');
 
     expect(await screen.findByText('Interviewed Contact')).not.toBeNull();
   });
@@ -159,14 +175,14 @@ describe('RelationshipsView', () => {
       ],
     });
 
-    render(
-      <ThemeContextProvider>
-        <RelationshipsView />
-      </ThemeContextProvider>
-    );
+    renderView();
+
+    expect(
+      await screen.findByText('1 applied jobs, 1 contacts')
+    ).not.toBeNull();
+    await openJob('Acme');
 
     expect(await screen.findByText('Attached Contact')).not.toBeNull();
     expect(screen.queryByText('Standalone Contact')).toBeNull();
-    expect(screen.getByText('1 applied jobs, 1 contacts')).not.toBeNull();
   });
 });

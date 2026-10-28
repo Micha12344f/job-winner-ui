@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
+import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useQuery } from '@apollo/client/react';
@@ -40,32 +43,32 @@ export function hasSubmissionEvidence(application, interviewedIds = new Set()) {
   return SUBMITTED_STATUSES.has(String(application.status || '').toLowerCase());
 }
 
-function LeadCard({ lead }) {
+function LeadRow({ lead }) {
   const { t } = useTranslation();
   const contactedOn = lead.last_contact_at?.slice(0, 10);
+  const email = lead.email;
 
   return (
-    <Card
-      component="article"
-      sx={{
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1,
-        height: '100%',
-      }}
-    >
-      <Stack direction="row" justifyContent="space-between" gap={1}>
+    <Box>
+      <Stack
+        direction="row"
+        alignItems="flex-start"
+        justifyContent="space-between"
+        gap={1}
+      >
         <Box sx={{ minWidth: 0 }}>
           <Typography
-            component="h4"
-            variant="subtitle1"
+            variant="body2"
             sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
           >
             {lead.name}
           </Typography>
           {lead.role && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
               {lead.role}
             </Typography>
           )}
@@ -75,46 +78,43 @@ function LeadCard({ lead }) {
           label={lead.status || t('relationships.unknownStatus')}
         />
       </Stack>
-      {lead.email && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ overflowWrap: 'anywhere' }}
+
+      {(email || contactedOn) && (
+        <Stack
+          direction="row"
+          flexWrap="wrap"
+          columnGap={2}
+          rowGap={0.25}
+          sx={{ mt: 0.5 }}
         >
-          <a href={`mailto:${lead.email}`}>{lead.email}</a>
-        </Typography>
+          {email && (
+            <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
+              <a href={`mailto:${email}`}>{email}</a>
+            </Typography>
+          )}
+          {contactedOn && (
+            <Typography variant="caption" color="text.secondary">
+              {t('relationships.lastContact', { date: contactedOn })}
+            </Typography>
+          )}
+        </Stack>
       )}
-      {contactedOn && (
-        <Typography variant="caption" color="text.secondary">
-          {t('relationships.lastContact', { date: contactedOn })}
-        </Typography>
-      )}
+
       {lead.next_action && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" color="text.secondary" display="block">
           {t('relationships.nextAction')}: {lead.next_action}
-          {lead.next_action_due && ` (${lead.next_action_due})`}
+          {lead.next_action_due ? ` (${lead.next_action_due})` : ''}
         </Typography>
       )}
-      {lead.notes && (
-        <Typography variant="caption" color="text.secondary">
-          {lead.notes.length > 220
-            ? `${lead.notes.slice(0, 220)}…`
-            : lead.notes}
-        </Typography>
-      )}
+
       {lead.linkedin_url && (
-        <Button
-          size="small"
-          variant="text"
-          href={lead.linkedin_url}
-          target="_blank"
-          rel="noreferrer"
-          sx={{ alignSelf: 'flex-start', mt: 'auto' }}
-        >
-          {t('relationships.openProfile')}
-        </Button>
+        <Typography variant="caption" display="block">
+          <a href={lead.linkedin_url} target="_blank" rel="noreferrer">
+            {t('relationships.openProfile')}
+          </a>
+        </Typography>
       )}
-    </Card>
+    </Box>
   );
 }
 
@@ -192,40 +192,44 @@ export default function RelationshipsView() {
   };
 
   return (
-    <Container component="main" maxWidth="lg" sx={{ pt: 3, pb: 4 }}>
+    <Container
+      component="main"
+      maxWidth="md"
+      sx={{ pt: { xs: 2, sm: 3 }, pb: 4, px: { xs: 2, sm: 3 } }}
+    >
       <Stack
-        direction="row"
-        alignItems="flex-start"
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
         justifyContent="space-between"
-        gap={2}
+        gap={1}
         sx={{ mb: 2 }}
       >
-        <Box>
-          <Typography component="h2" variant="h5">
+        <Box sx={{ minWidth: 0 }}>
+          <Typography component="h2" variant="h6">
             {t('relationships.tab')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {t('relationships.appliedOnlySubtitle')}
           </Typography>
+          {!loading && !error && (
+            <Typography variant="caption" color="text.secondary">
+              {t('relationships.summary', {
+                jobs: groups.length,
+                contacts: contactCount,
+              })}
+            </Typography>
+          )}
         </Box>
         <Button
           startIcon={<RefreshIcon />}
           onClick={refresh}
           disabled={leadsLoading}
           size="small"
+          sx={{ flexShrink: 0 }}
         >
           {t('relationships.refresh')}
         </Button>
       </Stack>
-
-      {!loading && !error && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {t('relationships.summary', {
-            jobs: groups.length,
-            contacts: contactCount,
-          })}
-        </Alert>
-      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -236,40 +240,78 @@ export default function RelationshipsView() {
       {loading ? (
         <Loading />
       ) : groups.length > 0 ? (
-        groups.map(({ application, leads: applicationLeads }) => (
-          <Box key={application.id} sx={{ mb: 3 }}>
-            <Stack
-              direction="row"
-              alignItems="center"
-              flexWrap="wrap"
-              gap={1}
-              sx={{ mb: 1 }}
+        <Stack spacing={1}>
+          {groups.map(({ application, leads: applicationLeads }) => (
+            <Accordion
+              key={application.id}
+              disableGutters
+              elevation={0}
+              sx={{
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 2,
+                '&:before': { display: 'none' },
+              }}
             >
-              <BusinessOutlinedIcon fontSize="small" color="action" />
-              <Typography variant="h6">
-                {application.companyName || t('relationships.unknownCompany')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {application.jobTitle}
-              </Typography>
-              <Chip size="small" label={application.status} />
-              <Typography variant="caption" color="text.secondary">
-                {application.appliedDate
-                  ? t('relationships.appliedOn', {
-                      date: application.appliedDate,
-                    })
-                  : t('relationships.appliedDateUnknown')}
-              </Typography>
-            </Stack>
-            <Grid container spacing={2}>
-              {applicationLeads.map(lead => (
-                <Grid key={lead.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                  <LeadCard lead={lead} />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        ))
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon fontSize="small" />}
+                sx={{
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  '& .MuiAccordionSummary-content': { minWidth: 0, my: 1 },
+                }}
+              >
+                <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    flexWrap="wrap"
+                    columnGap={1}
+                    rowGap={0.5}
+                  >
+                    <BusinessOutlinedIcon fontSize="small" color="action" />
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+                    >
+                      {application.companyName ||
+                        t('relationships.unknownCompany')}
+                    </Typography>
+                    <Chip size="small" label={application.status} />
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={t('relationships.contactCount', {
+                        count: applicationLeads.length,
+                      })}
+                    />
+                  </Stack>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
+                    {application.jobTitle}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {application.appliedDate
+                      ? t('relationships.appliedOn', {
+                          date: application.appliedDate,
+                        })
+                      : t('relationships.appliedDateUnknown')}
+                  </Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: { xs: 1.5, sm: 2 }, pt: 0, pb: 1.5 }}>
+                <Stack divider={<Divider flexItem />} spacing={1.25}>
+                  {applicationLeads.map(lead => (
+                    <LeadRow key={lead.id} lead={lead} />
+                  ))}
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Stack>
       ) : (
         !error && (
           <EmptyState
