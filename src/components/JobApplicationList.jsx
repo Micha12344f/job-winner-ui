@@ -12,7 +12,11 @@ import Grid from '@mui/material/Grid';
 import ApplicationHeatmap from './ApplicationHeatmap';
 import MountOnFirstOpen from './common/MountOnFirstOpen';
 import { JobApplicationDialog } from './lazyDialogs';
-import { STATUS_SORT_ORDER, normaliseStatus } from '../config/status';
+import {
+  STATUS_SORT_ORDER,
+  isVisibleApplication,
+  normaliseStatus,
+} from '../config/status';
 import { DELETE_JOB_APPLICATION } from '../graphql/mutation';
 import { GET_JOB_APPLICATIONS } from '../graphql/query';
 import useConfirmedAction from '../hooks/useConfirmedAction';
@@ -45,6 +49,11 @@ const sortByStatusThenDate = jobs =>
 export default function JobApplicationList({ searchTerm, onClearSearch }) {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const { data, loading, error, refetch } = useJobApplications();
+  // Radar-promoted candidates (`open`) are not applications and stay hidden.
+  const applications = useMemo(
+    () => (data?.allJobApplication || []).filter(isVisibleApplication),
+    [data]
+  );
   // Optional so the list still renders outside the app shell (e.g. tests).
   const dialogs = useAppDialogs();
   const { open, item: jobApplication, handleOpen, handleClose } = useDialog();
@@ -69,14 +78,14 @@ export default function JobApplicationList({ searchTerm, onClearSearch }) {
   const filteredData = useMemo(
     () =>
       sortByStatusThenDate(
-        (data?.allJobApplication || []).filter(
+        applications.filter(
           job =>
             (selectedStatus === 'all' ||
               normaliseStatus(job.status) === selectedStatus) &&
             matchesSearch(job, searchTerm)
         )
       ),
-    [data, selectedStatus, searchTerm]
+    [applications, selectedStatus, searchTerm]
   );
 
   const handleStatusClick = status => {
@@ -86,7 +95,7 @@ export default function JobApplicationList({ searchTerm, onClearSearch }) {
   // Skeleton only before there is data: first load, or a retry after an
   // error. Background refetches (after save/delete) keep the list on screen.
   const showSkeleton = loading && !data;
-  const totalCount = data?.allJobApplication?.length || 0;
+  const totalCount = applications.length;
   const statusLabel = t(`jobStatusBar.${selectedStatus}`);
 
   return (
@@ -128,7 +137,7 @@ export default function JobApplicationList({ searchTerm, onClearSearch }) {
           )}
           {!showSkeleton && !error && totalCount > 0 && (
             <>
-              <ApplicationHeatmap applications={data.allJobApplication} />
+              <ApplicationHeatmap applications={applications} />
               <JobStatusBar
                 data={data}
                 selectedStatus={selectedStatus}

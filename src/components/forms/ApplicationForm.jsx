@@ -40,7 +40,7 @@ export default function ApplicationForm({
     description: '',
     note: '',
     jobUrl: '',
-    status: 'open',
+    status: 'active',
     appliedDate: dayjs().format('YYYY-MM-DD'),
   });
   const [errors, setErrors] = useState({});
@@ -68,7 +68,7 @@ export default function ApplicationForm({
         description: jobApplication.description || '',
         note: jobApplication.note || '',
         jobUrl: jobApplication.jobUrl || '',
-        status: normaliseStatus(jobApplication.status) || 'open',
+        status: normaliseStatus(jobApplication.status) || 'active',
         appliedDate: jobApplication.appliedDate || dayjs().format('YYYY-MM-DD'),
       });
     }

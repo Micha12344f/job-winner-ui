@@ -1,6 +1,16 @@
 // Job application statuses, in the order the filter bar shows them.
 // Colors live in the theme palette under `status.<name>`.
-export const JOB_STATUSES = ['open', 'active', 'ghosted', 'rejected'];
+//
+// `open` is deliberately absent: the core still stores radar-promoted
+// candidates as applications with status `open`, but those rows were never
+// applied to and are not applications. They are filtered out of every list,
+// count, heatmap and status menu (see isVisibleApplication).
+export const JOB_STATUSES = ['active', 'ghosted', 'rejected'];
+
+// Radar candidates live in the core as `open` rows until something is
+// submitted. Nothing on the Applications screen should show them.
+export const isVisibleApplication = application =>
+  normaliseStatus(application?.status) !== 'open';
 
 // The core API still carries one legacy status written by the sidecar before
 // this model settled: `applied` means "submitted, no decision yet", which is
