@@ -22,7 +22,11 @@ function App() {
     <ThemeContextProvider>
       <SnackbarProvider>
         <AppDialogsProvider>
-          <AppHeader searchTerm={searchTerm} onSearch={setSearchTerm} />
+          <AppHeader
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
+            showMobileAdd={section !== 2}
+          />
           <Box
             sx={{
               borderBottom: 1,
@@ -33,11 +37,52 @@ function App() {
             <Tabs
               value={section}
               onChange={(_, value) => setSection(value)}
+              variant="scrollable"
+              scrollButtons={false}
               aria-label={t('discovery.sections')}
             >
-              <Tab label={t('discovery.openTab')} />
-              <Tab label={t('discovery.applicationsTab')} />
-              <Tab label={t('relationships.tab')} />
+              <Tab
+                label={
+                  <>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'inline', sm: 'none' } }}
+                    >
+                      {t('discovery.openTabShort')}
+                    </Box>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'none', sm: 'inline' } }}
+                    >
+                      {t('discovery.openTab')}
+                    </Box>
+                  </>
+                }
+                sx={{ minWidth: 'auto', px: { xs: 1, sm: 2 } }}
+              />
+              <Tab
+                label={
+                  <>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'inline', sm: 'none' } }}
+                    >
+                      {t('discovery.applicationsTabShort')}
+                    </Box>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'none', sm: 'inline' } }}
+                    >
+                      {t('discovery.applicationsTab')}
+                    </Box>
+                  </>
+                }
+                sx={{ minWidth: 'auto', px: { xs: 1, sm: 2 } }}
+              />
+              <Tab
+                label={t('relationships.tab')}
+                sx={{ minWidth: 'auto', px: { xs: 1, sm: 2 } }}
+              />
             </Tabs>
           </Box>
           {section === 0 ? (

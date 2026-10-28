@@ -62,7 +62,11 @@ function Logo() {
   );
 }
 
-export default function AppHeader({ searchTerm, onSearch }) {
+export default function AppHeader({
+  searchTerm,
+  onSearch,
+  showMobileAdd = true,
+}) {
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const { mode, toggleColorMode } = useColorMode();
@@ -183,7 +187,7 @@ export default function AppHeader({ searchTerm, onSearch }) {
           toggleColorMode={toggleColorMode}
         />
       </AppBar>
-      {!isDesktop && (
+      {!isDesktop && showMobileAdd && (
         <Fab
           color="primary"
           aria-label={t('appHeader.newApplication')}

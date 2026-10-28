@@ -83,6 +83,45 @@ beforeEach(async () => {
 });
 
 describe('RelationshipsView', () => {
+  test('makes the profile obvious and keeps the explanation in a note', async () => {
+    mockData({
+      applications: [application({ appliedDate: '2026-10-22' })],
+      leads: [
+        lead({ linkedin_url: 'https://www.linkedin.com/in/jane-recruiter' }),
+      ],
+    });
+    renderView();
+    expect(await screen.findByText('Finance Analyst')).not.toBeNull();
+    expect(
+      screen.queryByText(
+        'Only contacts attached to jobs you have actually applied to.'
+      )
+    ).toBeNull();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'About relationships' })
+    );
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Only contacts attached to jobs you have actually applied to.'
+    );
+    await openJob('Acme');
+    const profile = screen.getByRole('link', { name: /Open profile/i });
+    expect(profile).toHaveAttribute(
+      'href',
+      'https://www.linkedin.com/in/jane-recruiter'
+    );
+    expect(profile).toHaveAttribute('target', '_blank');
+  });
+
+  test('does not offer an unsafe or missing profile link', async () => {
+    mockData({
+      applications: [application({ appliedDate: '2026-10-22' })],
+      leads: [lead({ linkedin_url: 'javascript:alert(1)' })],
+    });
+    renderView();
+    await openJob('Acme');
+    expect(screen.queryByRole('link', { name: /Open profile/i })).toBeNull();
+  });
+
   test('reveals contacts when the job row is opened', async () => {
     mockData({
       applications: [
@@ -99,7 +138,7 @@ describe('RelationshipsView', () => {
     await openJob('Acme');
 
     expect(await screen.findByText('Jane Recruiter')).not.toBeNull();
-    expect(screen.getByText('1 contacts')).not.toBeNull();
+    expect(screen.getByText('1 contact')).not.toBeNull();
   });
 
   test('hides leads on jobs with no submission evidence', async () => {
@@ -177,9 +216,7 @@ describe('RelationshipsView', () => {
 
     renderView();
 
-    expect(
-      await screen.findByText('1 applied jobs, 1 contacts')
-    ).not.toBeNull();
+    expect(await screen.findByText('Jobs 1 · Contacts 1')).not.toBeNull();
     await openJob('Acme');
 
     expect(await screen.findByText('Attached Contact')).not.toBeNull();
@@ -216,7 +253,7 @@ describe('RelationshipsView', () => {
 
     await waitFor(() => expect(screen.queryByText('Acme')).toBeNull());
     expect(screen.getByText('Beta')).not.toBeNull();
-    expect(screen.getByText('1 applied jobs, 1 contacts')).not.toBeNull();
+    expect(screen.getByText('Jobs 1 · Contacts 1')).not.toBeNull();
   });
 
   test('orders jobs by the selected order', async () => {

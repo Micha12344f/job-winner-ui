@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Accordion from '@mui/material/Accordion';
@@ -11,10 +13,12 @@ import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import Tooltip from '@mui/material/Tooltip';
 import { useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
 import { listAllLeads } from '../api/leadsClient';
@@ -58,50 +62,75 @@ export function hasSubmissionEvidence(application, interviewedIds = new Set()) {
 function LeadRow({ lead }) {
   const { t } = useTranslation();
   const contactedOn = lead.last_contact_at?.slice(0, 10);
-  const email = lead.email;
+  const profile = /^https?:\/\//i.test(lead.linkedin_url || '')
+    ? lead.linkedin_url
+    : null;
 
   return (
-    <Box>
+    <Box sx={{ py: 0.5, minWidth: 0 }}>
       <Stack
         direction="row"
-        alignItems="flex-start"
-        justifyContent="space-between"
-        gap={1}
+        sx={{
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1.25,
+        }}
       >
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, flex: '1 1 180px' }}>
           <Typography
-            variant="body2"
+            variant="body1"
             sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
           >
             {lead.name}
           </Typography>
           {lead.role && (
             <Typography
-              variant="caption"
+              variant="body2"
               color="text.secondary"
               display="block"
+              sx={{ overflowWrap: 'anywhere' }}
             >
               {lead.role}
             </Typography>
           )}
         </Box>
-        <StatusBadge
-          tone={LEAD_STATUS_TONES[lead.status] || 'other'}
-          label={lead.status || t('relationships.unknownStatus')}
-        />
-      </Stack>
-
-      {(email || contactedOn) && (
         <Stack
           direction="row"
-          flexWrap="wrap"
-          columnGap={2}
-          rowGap={0.25}
-          sx={{ mt: 0.5 }}
+          sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.75 }}
         >
-          {email && (
-            <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
-              <a href={`mailto:${email}`}>{email}</a>
+          <StatusBadge
+            tone={LEAD_STATUS_TONES[lead.status] || 'other'}
+            label={lead.status || t('relationships.unknownStatus')}
+          />
+          {profile && (
+            <Button
+              component="a"
+              href={profile}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              variant="outlined"
+              endIcon={<OpenInNewIcon fontSize="small" />}
+              sx={{ minHeight: 40, whiteSpace: 'nowrap' }}
+            >
+              {t('relationships.openProfile')}
+            </Button>
+          )}
+        </Stack>
+      </Stack>
+
+      {(lead.email || contactedOn) && (
+        <Stack
+          direction="row"
+          sx={{ flexWrap: 'wrap', columnGap: 2, rowGap: 0.25, mt: 0.5 }}
+        >
+          {lead.email && (
+            <Typography
+              variant="caption"
+              sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+            >
+              <a href={`mailto:${lead.email}`}>{lead.email}</a>
             </Typography>
           )}
           {contactedOn && (
@@ -113,17 +142,14 @@ function LeadRow({ lead }) {
       )}
 
       {lead.next_action && (
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+          sx={{ overflowWrap: 'anywhere' }}
+        >
           {t('relationships.nextAction')}: {lead.next_action}
           {lead.next_action_due ? ` (${lead.next_action_due})` : ''}
-        </Typography>
-      )}
-
-      {lead.linkedin_url && (
-        <Typography variant="caption" display="block">
-          <a href={lead.linkedin_url} target="_blank" rel="noreferrer">
-            {t('relationships.openProfile')}
-          </a>
         </Typography>
       )}
     </Box>
@@ -312,18 +338,24 @@ export default function RelationshipsView() {
     >
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        justifyContent="space-between"
-        gap={1}
-        sx={{ mb: 2 }}
+        sx={{
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 1,
+          mb: 2,
+        }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography component="h2" variant="h6">
-            {t('relationships.tab')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t('relationships.appliedOnlySubtitle')}
-          </Typography>
+          <Stack direction="row" sx={{ alignItems: 'center', gap: 0.5 }}>
+            <Typography component="h2" variant="h6">
+              {t('relationships.tab')}
+            </Typography>
+            <Tooltip title={t('relationships.appliedOnlySubtitle')} arrow>
+              <IconButton size="small" aria-label={t('relationships.about')}>
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
           {!loading && !error && (
             <Typography variant="caption" color="text.secondary">
               {t('relationships.summary', {
@@ -353,10 +385,12 @@ export default function RelationshipsView() {
       {!loading && groups.length > 0 && (
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          justifyContent="space-between"
-          gap={1}
-          sx={{ mb: 1.5 }}
+          sx={{
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: 'space-between',
+            gap: 1,
+            mb: 1.5,
+          }}
         >
           <StatusFilter
             value={statusFilter}
@@ -408,47 +442,69 @@ export default function RelationshipsView() {
                   <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
                     <Stack
                       direction="row"
-                      alignItems="center"
-                      flexWrap="wrap"
-                      columnGap={1}
-                      rowGap={0.5}
+                      sx={{
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        columnGap: 1,
+                        rowGap: 1,
+                      }}
                     >
-                      <BusinessOutlinedIcon fontSize="small" color="action" />
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+                      <Box sx={{ minWidth: 0, flex: '1 1 220px' }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 700,
+                            lineHeight: 1.35,
+                            overflowWrap: 'anywhere',
+                          }}
+                        >
+                          {application.jobTitle}
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          sx={{ flexWrap: 'wrap', columnGap: 1, mt: 0.35 }}
+                        >
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+                          >
+                            {application.companyName ||
+                              t('relationships.unknownCompany')}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {application.appliedDate
+                              ? t('relationships.appliedOn', {
+                                  date: application.appliedDate,
+                                })
+                              : t('relationships.appliedDateUnknown')}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                      <Stack
+                        direction="row"
+                        sx={{
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: 0.75,
+                        }}
                       >
-                        {application.companyName ||
-                          t('relationships.unknownCompany')}
-                      </Typography>
-                      <StatusBadge
-                        tone={status}
-                        label={t(`jobStatusBar.${status}`, {
-                          defaultValue: application.status,
-                        })}
-                      />
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={t('relationships.contactCount', {
-                          count: applicationLeads.length,
-                        })}
-                      />
+                        <StatusBadge
+                          tone={status}
+                          label={t(`jobStatusBar.${status}`, {
+                            defaultValue: application.status,
+                          })}
+                        />
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label={t('relationships.contactCount', {
+                            count: applicationLeads.length,
+                          })}
+                        />
+                      </Stack>
                     </Stack>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ overflowWrap: 'anywhere' }}
-                    >
-                      {application.jobTitle}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {application.appliedDate
-                        ? t('relationships.appliedOn', {
-                            date: application.appliedDate,
-                          })
-                        : t('relationships.appliedDateUnknown')}
-                    </Typography>
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails
