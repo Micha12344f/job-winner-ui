@@ -185,4 +185,82 @@ describe('RelationshipsView', () => {
     expect(await screen.findByText('Attached Contact')).not.toBeNull();
     expect(screen.queryByText('Standalone Contact')).toBeNull();
   });
+
+  test('filters jobs by status', async () => {
+    mockData({
+      applications: [
+        application({
+          id: '1',
+          companyName: 'Acme',
+          appliedDate: '2026-10-22',
+        }),
+        application({
+          id: '2',
+          companyName: 'Beta',
+          status: 'ghosted',
+          appliedDate: '2026-10-20',
+        }),
+      ],
+      leads: [
+        lead({ id: 10, application_id: 1, name: 'Acme Contact' }),
+        lead({ id: 11, application_id: 2, name: 'Beta Contact' }),
+      ],
+    });
+
+    renderView();
+
+    expect(await screen.findByText('Acme')).not.toBeNull();
+    expect(screen.getByText('Beta')).not.toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ghosted 1' }));
+
+    await waitFor(() => expect(screen.queryByText('Acme')).toBeNull());
+    expect(screen.getByText('Beta')).not.toBeNull();
+    expect(screen.getByText('1 applied jobs, 1 contacts')).not.toBeNull();
+  });
+
+  test('orders jobs by the selected order', async () => {
+    mockData({
+      applications: [
+        application({
+          id: '1',
+          companyName: 'Acme',
+          appliedDate: '2026-10-20',
+        }),
+        application({
+          id: '2',
+          companyName: 'Beta',
+          appliedDate: '2026-10-22',
+        }),
+      ],
+      leads: [
+        lead({ id: 10, application_id: 1, name: 'Acme One' }),
+        lead({ id: 11, application_id: 2, name: 'Beta One' }),
+        lead({ id: 12, application_id: 2, name: 'Beta Two' }),
+      ],
+    });
+
+    renderView();
+
+    const jobRows = () =>
+      screen
+        .getAllByRole('button', { name: /Acme|Beta/ })
+        .map(node => node.textContent);
+
+    // Newest applied is the default, so Beta (22 Oct) comes first.
+    await waitFor(() => expect(jobRows()).toHaveLength(2));
+    expect(jobRows()[0]).toContain('Beta');
+
+    await userEvent.click(screen.getByRole('combobox', { name: /Order/ }));
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Oldest applied' })
+    );
+    await waitFor(() => expect(jobRows()[0]).toContain('Acme'));
+
+    await userEvent.click(screen.getByRole('combobox', { name: /Order/ }));
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Company A to Z' })
+    );
+    await waitFor(() => expect(jobRows()[0]).toContain('Acme'));
+  });
 });

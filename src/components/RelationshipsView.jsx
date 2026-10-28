@@ -11,11 +11,14 @@ import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
 import { listAllLeads } from '../api/leadsClient';
+import { JOB_STATUSES, normaliseStatus, statusColor } from '../config/status';
 import { GET_ALL_INTERVIEWS, GET_JOB_APPLICATIONS } from '../graphql/query';
 import EmptyState from './common/EmptyState';
 import Loading from './common/Loading';
@@ -26,6 +29,15 @@ import StatusBadge from './common/StatusBadge';
 // is not evidence, because a row can be marked active before anything has been
 // submitted, and `open` rows are unsubmitted by definition.
 const SUBMITTED_STATUSES = new Set(['applied', 'ghosted', 'rejected']);
+
+const STATUS_FILTERS = ['all', ...JOB_STATUSES];
+
+const SORT_OPTIONS = [
+  { value: 'applied_desc', labelKey: 'sortAppliedDesc' },
+  { value: 'applied_asc', labelKey: 'sortAppliedAsc' },
+  { value: 'company', labelKey: 'sortCompany' },
+  { value: 'contacts', labelKey: 'sortContacts' },
+];
 
 const LEAD_STATUS_TONES = {
   identified: 'all',
@@ -118,6 +130,73 @@ function LeadRow({ lead }) {
   );
 }
 
+function StatusFilter({ value, counts, onChange }) {
+  const { t } = useTranslation();
+
+  return (
+    <Box
+      role="group"
+      aria-label={t('relationships.filterLabel')}
+      sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, minWidth: 0 }}
+    >
+      {STATUS_FILTERS.map(status => {
+        const selected = value === status;
+        const count = counts[status] || 0;
+        return (
+          <Chip
+            key={status}
+            clickable
+            size="small"
+            aria-pressed={selected}
+            disabled={status !== 'all' && count === 0}
+            onClick={() => onChange(status)}
+            label={
+              <>
+                {t(`jobStatusBar.${status}`)}{' '}
+                <Box
+                  component="span"
+                  sx={{ ml: 0.25, fontWeight: 700, opacity: 0.85 }}
+                >
+                  {count}
+                </Box>
+              </>
+            }
+            icon={
+              <Box
+                component="span"
+                aria-hidden
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor: selected
+                    ? statusColor(status, 'solidText')
+                    : statusColor(status, 'main'),
+                }}
+              />
+            }
+            sx={{
+              flexShrink: 0,
+              px: 0.5,
+              border: 1,
+              borderColor: selected
+                ? statusColor(status, 'solid')
+                : statusColor(status, 'soft'),
+              bgcolor: selected
+                ? statusColor(status, 'solid')
+                : statusColor(status, 'soft'),
+              color: selected
+                ? statusColor(status, 'solidText')
+                : statusColor(status, 'text'),
+              '& .MuiChip-icon': { ml: 1, mr: -0.25 },
+            }}
+          />
+        );
+      })}
+    </Box>
+  );
+}
+
 export default function RelationshipsView() {
   const { t } = useTranslation();
   const {
@@ -131,6 +210,8 @@ export default function RelationshipsView() {
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadsError, setLeadsError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('applied_desc');
 
   const loadLeads = useCallback(async () => {
     try {
@@ -165,21 +246,53 @@ export default function RelationshipsView() {
       .filter(application => hasSubmissionEvidence(application, interviewedIds))
       .map(application => ({
         application,
+        status: normaliseStatus(application.status),
         leads: leads.filter(
           lead =>
             lead.application_id != null &&
             String(lead.application_id) === String(application.id)
         ),
       }))
-      .filter(group => group.leads.length > 0)
-      .sort((a, b) =>
-        String(b.application.appliedDate ?? '').localeCompare(
-          String(a.application.appliedDate ?? '')
-        )
-      );
+      .filter(group => group.leads.length > 0);
   }, [applicationData, leads, interviewedIds]);
 
-  const contactCount = groups.reduce(
+  const counts = useMemo(
+    () =>
+      groups.reduce(
+        (acc, group) => ({
+          ...acc,
+          all: acc.all + 1,
+          [group.status]: (acc[group.status] || 0) + 1,
+        }),
+        { all: 0 }
+      ),
+    [groups]
+  );
+
+  const visibleGroups = useMemo(() => {
+    const filtered =
+      statusFilter === 'all'
+        ? groups
+        : groups.filter(group => group.status === statusFilter);
+
+    const byDate = (a, b) =>
+      String(a.application.appliedDate ?? '').localeCompare(
+        String(b.application.appliedDate ?? '')
+      );
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'applied_asc') return byDate(a, b) || 0;
+      if (sortBy === 'company') {
+        return String(a.application.companyName ?? '').localeCompare(
+          String(b.application.companyName ?? '')
+        );
+      }
+      if (sortBy === 'contacts') return b.leads.length - a.leads.length;
+      return byDate(b, a) || 0;
+    });
+  }, [groups, statusFilter, sortBy]);
+
+  const contactCount = visibleGroups.reduce(
     (count, group) => count + group.leads.length,
     0
   );
@@ -214,7 +327,7 @@ export default function RelationshipsView() {
           {!loading && !error && (
             <Typography variant="caption" color="text.secondary">
               {t('relationships.summary', {
-                jobs: groups.length,
+                jobs: visibleGroups.length,
                 contacts: contactCount,
               })}
             </Typography>
@@ -237,81 +350,127 @@ export default function RelationshipsView() {
         </Alert>
       )}
 
+      {!loading && groups.length > 0 && (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+          gap={1}
+          sx={{ mb: 1.5 }}
+        >
+          <StatusFilter
+            value={statusFilter}
+            counts={counts}
+            onChange={setStatusFilter}
+          />
+          <TextField
+            select
+            size="small"
+            label={t('relationships.order')}
+            value={sortBy}
+            onChange={event => setSortBy(event.target.value)}
+            sx={{ flexShrink: 0, minWidth: { sm: 170 } }}
+          >
+            {SORT_OPTIONS.map(option => (
+              <MenuItem key={option.value} value={option.value}>
+                {t(`relationships.${option.labelKey}`)}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
+      )}
+
       {loading ? (
         <Loading />
-      ) : groups.length > 0 ? (
+      ) : visibleGroups.length > 0 ? (
         <Stack spacing={1}>
-          {groups.map(({ application, leads: applicationLeads }) => (
-            <Accordion
-              key={application.id}
-              disableGutters
-              elevation={0}
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 2,
-                '&:before': { display: 'none' },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon fontSize="small" />}
+          {visibleGroups.map(
+            ({ application, status, leads: applicationLeads }) => (
+              <Accordion
+                key={application.id}
+                disableGutters
+                elevation={0}
                 sx={{
-                  px: { xs: 1.5, sm: 2 },
-                  py: 0.5,
-                  '& .MuiAccordionSummary-content': { minWidth: 0, my: 1 },
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  '&:before': { display: 'none' },
                 }}
               >
-                <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    flexWrap="wrap"
-                    columnGap={1}
-                    rowGap={0.5}
-                  >
-                    <BusinessOutlinedIcon fontSize="small" color="action" />
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon fontSize="small" />}
+                  sx={{
+                    px: { xs: 1.5, sm: 2 },
+                    py: 0.5,
+                    '& .MuiAccordionSummary-content': { minWidth: 0, my: 1 },
+                  }}
+                >
+                  <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      flexWrap="wrap"
+                      columnGap={1}
+                      rowGap={0.5}
                     >
-                      {application.companyName ||
-                        t('relationships.unknownCompany')}
+                      <BusinessOutlinedIcon fontSize="small" color="action" />
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+                      >
+                        {application.companyName ||
+                          t('relationships.unknownCompany')}
+                      </Typography>
+                      <StatusBadge
+                        tone={status}
+                        label={t(`jobStatusBar.${status}`, {
+                          defaultValue: application.status,
+                        })}
+                      />
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={t('relationships.contactCount', {
+                          count: applicationLeads.length,
+                        })}
+                      />
+                    </Stack>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ overflowWrap: 'anywhere' }}
+                    >
+                      {application.jobTitle}
                     </Typography>
-                    <Chip size="small" label={application.status} />
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={t('relationships.contactCount', {
-                        count: applicationLeads.length,
-                      })}
-                    />
+                    <Typography variant="caption" color="text.secondary">
+                      {application.appliedDate
+                        ? t('relationships.appliedOn', {
+                            date: application.appliedDate,
+                          })
+                        : t('relationships.appliedDateUnknown')}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails
+                  sx={{ px: { xs: 1.5, sm: 2 }, pt: 0, pb: 1.5 }}
+                >
+                  <Stack divider={<Divider flexItem />} spacing={1.25}>
+                    {applicationLeads.map(lead => (
+                      <LeadRow key={lead.id} lead={lead} />
+                    ))}
                   </Stack>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ overflowWrap: 'anywhere' }}
-                  >
-                    {application.jobTitle}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {application.appliedDate
-                      ? t('relationships.appliedOn', {
-                          date: application.appliedDate,
-                        })
-                      : t('relationships.appliedDateUnknown')}
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: { xs: 1.5, sm: 2 }, pt: 0, pb: 1.5 }}>
-                <Stack divider={<Divider flexItem />} spacing={1.25}>
-                  {applicationLeads.map(lead => (
-                    <LeadRow key={lead.id} lead={lead} />
-                  ))}
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+                </AccordionDetails>
+              </Accordion>
+            )
+          )}
         </Stack>
+      ) : groups.length > 0 ? (
+        <Alert severity="info">
+          {t('relationships.noMatch')}{' '}
+          <Button size="small" onClick={() => setStatusFilter('all')}>
+            {t('jobStatusBar.clear')}
+          </Button>
+        </Alert>
       ) : (
         !error && (
           <EmptyState
