@@ -50,4 +50,26 @@ describe('JobStatusBar', () => {
     );
     expect(handleStatusClick).toHaveBeenCalledWith('all');
   });
+
+  test('counts legacy `applied` rows as active, so every card has a chip', () => {
+    render(
+      <ThemeContextProvider>
+        <JobStatusBar
+          data={{
+            allJobApplication: [
+              { id: '1', status: 'active' },
+              { id: '2', status: 'applied' },
+              { id: '3', status: 'rejected' },
+            ],
+          }}
+          selectedStatus="all"
+          handleStatusClick={vi.fn()}
+        />
+      </ThemeContextProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Active 2' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'All 3' })).not.toBeNull();
+    // No bogus `applied` chip was created.
+    expect(screen.queryByRole('button', { name: /applied/i })).toBeNull();
+  });
 });

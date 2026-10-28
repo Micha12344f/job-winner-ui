@@ -13,7 +13,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { JOB_STATUSES } from '../../config/status';
+import { JOB_STATUSES, normaliseStatus } from '../../config/status';
 import useAsyncAction from '../../hooks/useAsyncAction';
 import {
   ADD_JOB_APPLICATION,
@@ -68,7 +68,7 @@ export default function ApplicationForm({
         description: jobApplication.description || '',
         note: jobApplication.note || '',
         jobUrl: jobApplication.jobUrl || '',
-        status: jobApplication.status || 'open',
+        status: normaliseStatus(jobApplication.status) || 'open',
         appliedDate: jobApplication.appliedDate || dayjs().format('YYYY-MM-DD'),
       });
     }

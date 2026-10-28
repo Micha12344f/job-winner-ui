@@ -12,7 +12,7 @@ import Grid from '@mui/material/Grid';
 import ApplicationHeatmap from './ApplicationHeatmap';
 import MountOnFirstOpen from './common/MountOnFirstOpen';
 import { JobApplicationDialog } from './lazyDialogs';
-import { STATUS_SORT_ORDER } from '../config/status';
+import { STATUS_SORT_ORDER, normaliseStatus } from '../config/status';
 import { DELETE_JOB_APPLICATION } from '../graphql/mutation';
 import { GET_JOB_APPLICATIONS } from '../graphql/query';
 import useConfirmedAction from '../hooks/useConfirmedAction';
@@ -37,8 +37,8 @@ const matchesSearch = (job, searchTerm) => {
 const sortByStatusThenDate = jobs =>
   [...jobs].sort(
     (a, b) =>
-      (STATUS_SORT_ORDER[a.status] ?? 99) -
-        (STATUS_SORT_ORDER[b.status] ?? 99) ||
+      (STATUS_SORT_ORDER[normaliseStatus(a.status)] ?? 99) -
+        (STATUS_SORT_ORDER[normaliseStatus(b.status)] ?? 99) ||
       new Date(b.appliedDate) - new Date(a.appliedDate)
   );
 
@@ -71,7 +71,8 @@ export default function JobApplicationList({ searchTerm, onClearSearch }) {
       sortByStatusThenDate(
         (data?.allJobApplication || []).filter(
           job =>
-            (selectedStatus === 'all' || job.status === selectedStatus) &&
+            (selectedStatus === 'all' ||
+              normaliseStatus(job.status) === selectedStatus) &&
             matchesSearch(job, searchTerm)
         )
       ),

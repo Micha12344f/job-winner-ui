@@ -10,6 +10,7 @@ import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
+import { normaliseStatus } from '../config/status';
 import { formatCalendarDate } from '../utils/dateUtil';
 import StatusBadge from './common/StatusBadge';
 
@@ -101,8 +102,10 @@ export default function JobApplicationCard({
           )}
         </Typography>
         <StatusBadge
-          tone={status}
-          label={t(`jobStatusBar.${status}`, { defaultValue: status })}
+          tone={normaliseStatus(status)}
+          label={t(`jobStatusBar.${normaliseStatus(status)}`, {
+            defaultValue: normaliseStatus(status),
+          })}
         />
       </Box>
 

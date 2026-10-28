@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import { useTranslation } from 'react-i18next';
-import { JOB_STATUSES, statusColor } from '../config/status';
+import { JOB_STATUSES, normaliseStatus, statusColor } from '../config/status';
 
 const FILTERS = ['all', ...JOB_STATUSES];
 
@@ -36,7 +36,11 @@ export default function JobStatusBar({
   const counts = useMemo(() => {
     const applications = data?.allJobApplication || [];
     return applications.reduce(
-      (acc, { status }) => ({ ...acc, [status]: (acc[status] || 0) + 1 }),
+      (acc, { status }) => {
+        // Legacy `applied` rows count as active, so every card has a chip.
+        const key = normaliseStatus(status);
+        return { ...acc, [key]: (acc[key] || 0) + 1 };
+      },
       { all: applications.length }
     );
   }, [data]);
