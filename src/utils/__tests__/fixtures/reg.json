@@ -1,0 +1,195 @@
+{
+ "generated_at": "2026-10-28T13:46:29.073694Z",
+ "count": 6,
+ "agents": [
+  {
+   "id": "job-radar-agent",
+   "name": "Job Radar Agent",
+   "role": "Discovery. Unauthenticated ATS polling, dedupe, scoring and promotion handoff. No browser, no cookies, no account risk.",
+   "owned_endpoints": [
+    "POST li-agent(8082) /radar/poll",
+    "GET li-agent(8082) /radar/inbox",
+    "POST li-agent(8082) /radar/inbox/{id}/status",
+    "POST /ext/radar/{inbox_id}/promote (planned, Phase 2)"
+   ],
+   "status": "failing",
+   "status_reason": "failure streak or last status failed on: Discovery hourly crawl (bookmark sources)",
+   "cron_jobs": [
+    {
+     "id": "f997d17166d8",
+     "name": "LinkedIn job radar (ATS, every 2h)",
+     "enabled": true,
+     "paused_at": null,
+     "last_status": "ok",
+     "last_run_at": "2026-10-28T11:52:11.838606+00:00",
+     "next_run_at": "2026-10-28T13:52:11.838606+00:00",
+     "failure_streak": 0,
+     "schedule": "every 120m",
+     "attribution": "known-id"
+    },
+    {
+     "id": "14e29e561a52",
+     "name": "Discovery hourly crawl (bookmark sources)",
+     "enabled": true,
+     "paused_at": null,
+     "last_status": "error",
+     "last_run_at": "2026-10-28T13:01:52.739290+00:00",
+     "next_run_at": "2026-10-28T14:00:00+00:00",
+     "failure_streak": 1,
+     "schedule": "0 * * * *",
+     "attribution": "keyword"
+    }
+   ],
+   "last_run_at": "2026-10-28T13:01:52.739290+00:00",
+   "next_run_at": "2026-10-28T13:52:11.838606+00:00"
+  },
+  {
+   "id": "linkedin-operator-agent",
+   "name": "LinkedIn Operator Agent",
+   "role": "Authenticated execution. Sole owner of the browser, the Governor and the budget; every LinkedIn mutation plus Easy Apply runs here.",
+   "owned_endpoints": [
+    "POST li-agent(8082) /connect",
+    "POST li-agent(8082) /message",
+    "POST li-agent(8082) /like",
+    "POST li-agent(8082) /comment",
+    "POST li-agent(8082) /apply",
+    "GET li-agent(8082) /leads/{id}/sync",
+    "GET li-agent(8082) /leads/{id}/thread",
+    "GET li-agent(8082) /session/health",
+    "GET li-agent(8082) /budget",
+    "POST li-agent(8082) /inbox/sync"
+   ],
+   "status": "active",
+   "status_reason": "at least one attributed cron job is enabled",
+   "cron_jobs": [
+    {
+     "id": "5e7acead37d9",
+     "name": "LinkedIn autopilot (weekday hourly)",
+     "enabled": true,
+     "paused_at": null,
+     "last_status": "ok",
+     "last_run_at": "2026-10-28T13:01:29.820677+00:00",
+     "next_run_at": "2026-10-28T14:00:00+00:00",
+     "failure_streak": 0,
+     "schedule": "0 9-18 * * 1-5",
+     "attribution": "known-id"
+    },
+    {
+     "id": "b87191576f8f",
+     "name": "LinkedIn lead outreach retry #70\u201381",
+     "enabled": false,
+     "paused_at": "2026-10-23T13:52:35.624902+00:00",
+     "last_status": null,
+     "last_run_at": null,
+     "next_run_at": "2026-10-23T14:37:21.653304+00:00",
+     "failure_streak": 0,
+     "schedule": "once in 1h",
+     "attribution": "keyword"
+    }
+   ],
+   "last_run_at": "2026-10-28T13:01:29.820677+00:00",
+   "next_run_at": "2026-10-23T14:37:21.653304+00:00"
+  },
+  {
+   "id": "application-tracker-agent",
+   "name": "Application Tracker Agent",
+   "role": "Data integrity. Promotes job_inbox rows into applications, writes JD/lead/meta/document rows, reconciles status and ghosting. Never touches LinkedIn and never writes li_* tables.",
+   "owned_endpoints": [
+    "GET /ext/jd/{application_id}",
+    "PUT /ext/jd/{application_id}",
+    "GET /ext/leads",
+    "POST /ext/leads",
+    "DELETE /ext/leads/{lead_id}",
+    "GET /ext/meta/{application_id}",
+    "PUT /ext/meta/{application_id}",
+    "GET /ext/agent/context/{application_id}"
+   ],
+   "status": "planned",
+   "status_reason": "no Hermes cron job is attributed to this agent yet",
+   "cron_jobs": [],
+   "last_run_at": null,
+   "next_run_at": null
+  },
+  {
+   "id": "outreach-sequencer-agent",
+   "name": "Outreach Sequencer Agent",
+   "role": "Planning brain. Decides who to contact, when and with what: nurture cadence, follow-up timing, reply detection, thread state. Plans only, never executes; copy stays behind the human gate.",
+   "owned_endpoints": [
+    "GET /ext/li/leads",
+    "GET /ext/li/leads/{lead_id}/timeline",
+    "GET /ext/agent/events",
+    "POST /ext/agent/events"
+   ],
+   "status": "planned",
+   "status_reason": "no Hermes cron job is attributed to this agent yet",
+   "cron_jobs": [],
+   "last_run_at": null,
+   "next_run_at": null
+  },
+  {
+   "id": "agent-ops-monitor",
+   "name": "Agent Ops Monitor",
+   "role": "Observability. Projects cron schedules forward, reports real run history and health, raises incidents. Read-only over Hermes cron state; owns this feed.",
+   "owned_endpoints": [
+    "GET /ext/agents/registry",
+    "GET /ext/agents/schedule",
+    "GET /ext/agents/runs",
+    "GET /ext/agents/health"
+   ],
+   "status": "planned",
+   "status_reason": "no Hermes cron job is attributed to this agent yet",
+   "cron_jobs": [],
+   "last_run_at": null,
+   "next_run_at": null
+  },
+  {
+   "id": "orchestrator",
+   "name": "Orchestrator",
+   "role": "Routing layer between the five lane agents: plans, delegates, coordinates and monitors. Owns no data domain of its own. Cron jobs that match no lane agent are attributed here as a fallback.",
+   "owned_endpoints": [
+    "(no HTTP surface: delegates via delegate_task / sub-agents)",
+    "reads GET /ext/agents/registry for lane status"
+   ],
+   "status": "active",
+   "status_reason": "at least one attributed cron job is enabled",
+   "cron_jobs": [
+    {
+     "id": "66604f70af37",
+     "name": "Job Winner 360 Review",
+     "enabled": true,
+     "paused_at": null,
+     "last_status": "ok",
+     "last_run_at": "2026-10-28T13:23:35.720019+00:00",
+     "next_run_at": "2026-10-28T14:12:41.207119+00:00",
+     "failure_streak": 0,
+     "schedule": "every 30m",
+     "attribution": "fallback"
+    },
+    {
+     "id": "44e017e906b3",
+     "name": "Job Winner JD backfill crawler (daily)",
+     "enabled": true,
+     "paused_at": null,
+     "last_status": "ok",
+     "last_run_at": "2026-10-28T07:02:30.030830+00:00",
+     "next_run_at": "2026-10-29T07:00:00+00:00",
+     "failure_streak": 0,
+     "schedule": "0 7 * * *",
+     "attribution": "fallback"
+    }
+   ],
+   "last_run_at": "2026-10-28T13:23:35.720019+00:00",
+   "next_run_at": "2026-10-28T14:12:41.207119+00:00"
+  }
+ ],
+ "source": {
+  "path": "/opt/data/cron/jobs.json",
+  "exists": true,
+  "readable": true,
+  "updated_at": "2026-10-28T13:42:41.208185+00:00",
+  "error": null,
+  "size_bytes": 19787,
+  "modified_at": "2026-10-28T13:42:41.207849+00:00"
+ },
+ "warnings": []
+}

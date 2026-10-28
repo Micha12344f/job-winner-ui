@@ -122,6 +122,23 @@ async function requestJson(path, { signal } = {}) {
   }
 }
 
+async function mutateJson(path, { method = 'POST', body, signal } = {}) {
+  const response = await fetch(`${extBaseUrl()}${path}`, {
+    method,
+    headers: {
+      Accept: 'application/json',
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal,
+  });
+  if (!response.ok) {
+    throw new ExtApiError(await readError(response), response.status);
+  }
+  if (response.status === 204) return {};
+  return response.json();
+}
+
 const feedQuery = ({ start, end } = {}) => {
   const params = new URLSearchParams();
   if (!emptyValue(start)) params.set('start', String(start));
@@ -320,6 +337,8 @@ export function normaliseOccurrences(row = {}, index = 0) {
   const shape = {
     kind: 'occurrence',
     agentId,
+    jobId: asString(row?.job_id, row?.jobId, row?.job, row?.cron_id),
+    skippable: row?.skippable === true,
     jobName,
     detail: asString(
       row?.schedule_display,
@@ -363,6 +382,7 @@ export function normaliseOccurrences(row = {}, index = 0) {
       slot && typeof slot === 'object' ? slot : { scheduled_instant: slot };
     return {
       ...shape,
+      skippable: value?.skippable === true || shape.skippable,
       id: asString(
         value?.id,
         value?.occurrence_id,
@@ -412,6 +432,45 @@ export async function getAgentSchedule({ start, end, signal } = {}) {
   );
   const items = feedItems(payload).flatMap(normaliseOccurrences);
   return { count: feedCount(payload, items), items };
+}
+
+/**
+ * Deletes a projected occurrence, or ends the series from that instant.
+ * `scope: 'one'` needs a script-driven job (the guard enforces it server-side).
+ * @param {{jobId: string, occurrenceAt: string, scope?: 'one'|'future', note?: string}} input
+ */
+export async function createScheduleException({
+  jobId,
+  occurrenceAt,
+  scope = 'one',
+  note = '',
+} = {}) {
+  if (!jobId) throw new Error('jobId is required');
+  if (!occurrenceAt) throw new Error('occurrenceAt is required');
+  return mutateJson('/agents/schedule/exceptions', {
+    method: 'POST',
+    body: { job_id: jobId, occurrence_at: occurrenceAt, scope, note },
+  });
+}
+
+/**
+ * Undoes a deletion. Pass `resume` when undoing an `end` that paused the job.
+ * @param {{jobId: string, at?: string, kind?: 'skip'|'end', resume?: boolean}} input
+ */
+export async function deleteScheduleException({
+  jobId,
+  at,
+  kind,
+  resume = false,
+} = {}) {
+  if (!jobId) throw new Error('jobId is required');
+  const params = new URLSearchParams({ job_id: jobId });
+  if (at) params.set('at', at);
+  if (kind) params.set('kind', kind);
+  if (resume) params.set('resume', 'true');
+  return mutateJson(`/agents/schedule/exceptions?${params.toString()}`, {
+    method: 'DELETE',
+  });
 }
 
 /**

@@ -1,0 +1,77 @@
+{
+ "generated_at": "2026-10-28T13:46:29.185653Z",
+ "status": "ok",
+ "jobs_file": {
+  "path": "/opt/data/cron/jobs.json",
+  "exists": true,
+  "readable": true,
+  "updated_at": "2026-10-28T13:42:41.208185+00:00",
+  "error": null,
+  "size_bytes": 19787,
+  "modified_at": "2026-10-28T13:42:41.207849+00:00"
+ },
+ "executions_db": {
+  "path": "/opt/data/cron/executions.db",
+  "exists": true,
+  "readable": true,
+  "error": null,
+  "size_bytes": 937984,
+  "wal_present": true,
+  "rows_scanned": 1000,
+  "truncated": false
+ },
+ "cron_incidents_table": {
+  "path": "/opt/data/cron/executions.db",
+  "exists": true,
+  "readable": true,
+  "error": null,
+  "rows_scanned": 330
+ },
+ "jobs": {
+  "total": 6,
+  "enabled": 5,
+  "disabled": 1,
+  "paused": 1,
+  "failing": 1,
+  "updated_at": "2026-10-28T13:42:41.208185+00:00"
+ },
+ "executions": {
+  "total": 1000,
+  "counted": 1000,
+  "last_24h": 89,
+  "latest_started_at": "2026-10-28T13:15:28.365569Z",
+  "by_status": {
+   "completed": 917,
+   "failed": 81,
+   "unknown": 2
+  },
+  "scan_limit": 5000,
+  "truncated": false
+ },
+ "incidents": {
+  "total": 330,
+  "open": 0,
+  "by_state": {
+   "resolved": 330
+  },
+  "by_failure_type": {
+   "script": 17,
+   "rate_limit": 240,
+   "timeout": 3,
+   "auth": 15,
+   "unknown": 33,
+   "agent": 3,
+   "config": 19
+  },
+  "latest_seen_at": "2026-10-28T13:01:52.428036Z",
+  "acknowledged": 0,
+  "resolved": 330,
+  "alerted": 0
+ },
+ "linkedin_session": {
+  "status": "not_probed",
+  "probed": false,
+  "reason": "This feed is deliberately read-only and never calls the li-agent service on port 8082, so li-agent session health is reported as not_probed; probe GET http://127.0.0.1:8082/session/health directly for the live verdict."
+ },
+ "warnings": []
+}

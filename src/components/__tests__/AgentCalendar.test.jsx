@@ -5,6 +5,7 @@ import i18n from '../../i18n';
 import { ThemeContextProvider } from '../ThemeContext';
 import AgentCalendar from '../AgentCalendar';
 import {
+  createScheduleException,
   getAgentHealth,
   getAgentRegistry,
   getAgentRuns,
@@ -16,6 +17,7 @@ vi.mock('../../api/agentsClient', () => ({
   getAgentSchedule: vi.fn(),
   getAgentRuns: vi.fn(),
   getAgentHealth: vi.fn(),
+  createScheduleException: vi.fn(),
 }));
 
 // Wednesday 21 October 2026, local time: the week window is Mon 19 - Sun 25.
@@ -81,10 +83,10 @@ const health = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderCalendar = () =>
+const renderCalendar = ({ view = 'week', ...props } = {}) =>
   render(
     <ThemeContextProvider>
-      <AgentCalendar today={TODAY} />
+      <AgentCalendar today={TODAY} defaultView={view} {...props} />
     </ThemeContextProvider>
   );
 
@@ -94,6 +96,7 @@ const chips = container => [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  createScheduleException.mockResolvedValue({ ok: true });
   getAgentRegistry.mockResolvedValue({
     count: 2,
     items: [
@@ -109,6 +112,161 @@ beforeEach(() => {
 afterEach(() => i18n.changeLanguage('en'));
 
 describe('AgentCalendar', () => {
+  describe('day view', () => {
+    it('lays one column per hour and puts each run in its own hour', async () => {
+      getAgentRuns.mockResolvedValue({
+        count: 2,
+        items: [
+          run({ id: 'r1', scheduledAt: '2026-10-21T09:05:00' }),
+          run({ id: 'r2', scheduledAt: '2026-10-21T14:40:00' }),
+        ],
+      });
+      getAgentSchedule.mockResolvedValue({ count: 0, items: [] });
+      const { container } = renderCalendar({ view: 'day' });
+
+      await screen.findByText('job-radar-agent');
+
+      const headings = container.querySelectorAll('[data-day-heading]');
+      expect(headings).toHaveLength(24);
+      expect(
+        container.querySelectorAll(
+          '[data-agent-cell="radar|2026-10-21|09"] [data-testid="agent-chip"]'
+        )
+      ).toHaveLength(1);
+      expect(
+        container.querySelectorAll(
+          '[data-agent-cell="radar|2026-10-21|14"] [data-testid="agent-chip"]'
+        )
+      ).toHaveLength(1);
+      expect(
+        container.querySelectorAll(
+          '[data-agent-cell="radar|2026-10-21|10"] [data-testid="agent-chip"]'
+        )
+      ).toHaveLength(0);
+    });
+
+    it('draws the current-time rule only on the current day', async () => {
+      const { unmount } = renderCalendar({
+        view: 'day',
+        now: new Date(2026, 9, 21, 10, 30, 0),
+      });
+      await screen.findByText('job-radar-agent');
+      expect(screen.getByTestId('agent-calendar-now-line')).toBeInTheDocument();
+      expect(screen.getByText('10:30')).toBeInTheDocument();
+      unmount();
+
+      renderCalendar({ view: 'day', now: new Date(2026, 9, 22, 10, 30, 0) });
+      await screen.findByText('job-radar-agent');
+      expect(
+        screen.queryByTestId('agent-calendar-now-line')
+      ).not.toBeInTheDocument();
+    });
+
+    it('opens on the hourly view by default', async () => {
+      const { container } = render(
+        <ThemeContextProvider>
+          <AgentCalendar today={TODAY} now={new Date(2026, 9, 21, 12, 0, 0)} />
+        </ThemeContextProvider>
+      );
+      await screen.findByText('job-radar-agent');
+      expect(screen.getByRole('button', { name: 'Day' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(container.querySelectorAll('[data-day-heading]')).toHaveLength(24);
+    });
+  });
+
+  describe('deleting a run', () => {
+    const occurrenceRow = overrides =>
+      occurrence({
+        jobId: 'f997d17166d8',
+        skippable: true,
+        ...overrides,
+      });
+
+    it('deletes one occurrence after confirmation', async () => {
+      getAgentSchedule.mockResolvedValue({
+        count: 1,
+        items: [occurrenceRow({ scheduledAt: '2026-10-21T11:00:00' })],
+      });
+      getAgentRuns.mockResolvedValue({ count: 0, items: [] });
+      const user = userEvent.setup();
+      renderCalendar({ view: 'day' });
+
+      await user.click(
+        await screen.findByRole('button', { name: /Score pipeline at 11:00/ })
+      );
+      const drawer = await screen.findByTestId('agent-run-drawer');
+      await user.click(
+        within(drawer).getByRole('button', { name: 'Delete this run' })
+      );
+      await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+      await waitFor(() =>
+        expect(createScheduleException).toHaveBeenCalledWith({
+          jobId: 'f997d17166d8',
+          occurrenceAt: '2026-10-21T11:00:00',
+          scope: 'one',
+          note: expect.stringContaining('one'),
+        })
+      );
+    });
+
+    it('ends the series from the chosen run', async () => {
+      getAgentSchedule.mockResolvedValue({
+        count: 1,
+        items: [occurrenceRow({ scheduledAt: '2026-10-21T11:00:00' })],
+      });
+      getAgentRuns.mockResolvedValue({ count: 0, items: [] });
+      const user = userEvent.setup();
+      renderCalendar({ view: 'day' });
+
+      await user.click(
+        await screen.findByRole('button', { name: /Score pipeline at 11:00/ })
+      );
+      const drawer = await screen.findByTestId('agent-run-drawer');
+      await user.click(
+        within(drawer).getByRole('button', {
+          name: 'Delete this and future runs',
+        })
+      );
+      await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+      await waitFor(() =>
+        expect(createScheduleException).toHaveBeenCalledWith(
+          expect.objectContaining({ scope: 'future' })
+        )
+      );
+    });
+
+    it('cannot skip a single run of an agent-driven schedule', async () => {
+      getAgentSchedule.mockResolvedValue({
+        count: 1,
+        items: [
+          occurrenceRow({
+            skippable: false,
+            scheduledAt: '2026-10-21T11:00:00',
+          }),
+        ],
+      });
+      getAgentRuns.mockResolvedValue({ count: 0, items: [] });
+      const user = userEvent.setup();
+      renderCalendar({ view: 'day' });
+
+      await user.click(
+        await screen.findByRole('button', { name: /Score pipeline at 11:00/ })
+      );
+      const drawer = await screen.findByTestId('agent-run-drawer');
+      expect(
+        within(drawer).getByRole('button', { name: 'Delete this run' })
+      ).toBeDisabled();
+      expect(
+        within(drawer).getByText(/Agent-driven schedule/)
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('render', () => {
     it('draws one swimlane per registered agent and both chips', async () => {
       const { container } = renderCalendar();

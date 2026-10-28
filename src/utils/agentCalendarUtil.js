@@ -10,7 +10,11 @@ import { DATE_KEY, dateLocale, formatDayLabel } from './heatmapUtil';
 
 export { DATE_KEY, dateLocale, formatDayLabel };
 
-export const CALENDAR_VIEWS = ['week', 'month'];
+export const CALENDAR_VIEWS = ['day', 'week', 'month'];
+
+// Hours drawn by the day view. Every hour gets a column so a run at 14:30
+// sits between 14:00 and 15:00 instead of being flattened into "today".
+export const DAY_HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 
 // Every run status the UI colours. Anything the sidecar invents beyond these
 // falls back to 'unknown' and renders in the neutral tone rather than
@@ -158,6 +162,11 @@ export function buildCalendarWindow({
 } = {}) {
   const base = dayjs(anchor).isValid() ? dayjs(anchor) : dayjs();
 
+  if (view === 'day') {
+    const start = base.startOf('day');
+    return { view: 'day', start, end: base.endOf('day'), days: [start] };
+  }
+
   if (view === 'month') {
     const start = base.startOf('month');
     const end = base.endOf('month');
@@ -192,7 +201,10 @@ export const windowQuery = ({ start, end }) => ({
  * @returns {dayjs.Dayjs}
  */
 export const shiftAnchor = (anchor, view, amount) =>
-  dayjs(anchor).add(amount, view === 'month' ? 'month' : 'week');
+  dayjs(anchor).add(
+    amount,
+    view === 'month' ? 'month' : view === 'day' ? 'day' : 'week'
+  );
 
 const monthDayFormatters = new Map();
 const monthYearFormatters = new Map();
@@ -218,6 +230,10 @@ const formatter = (cache, locale, options) => {
 export function periodLabel(window, language = 'en') {
   const locale = dateLocale(language);
   const { start, end, view } = window;
+
+  if (view === 'day') {
+    return formatDayLabel(start.format(DATE_KEY), language);
+  }
 
   if (view === 'month') {
     return formatter(monthYearFormatters, locale, {
@@ -293,6 +309,51 @@ export function formatInstant(value, language = 'en') {
 }
 
 /**
+ * Hour bucket key for one instant: 'YYYY-MM-DD|HH'. Null when unparsable, so
+ * a broken timestamp never lands in an arbitrary column.
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+export function hourKeyOf(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return null;
+  return `${parsed.format(DATE_KEY)}|${parsed.format('HH')}`;
+}
+
+/**
+ * How far through its hour a timestamp sits, 0–1, so a run at 14:30 is drawn
+ * at 14:30 inside the 14:00 column rather than snapped to the boundary.
+ * @param {unknown} value
+ * @returns {number}
+ */
+export function fractionOfHour(value) {
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return 0;
+  return (parsed.minute() * 60 + parsed.second()) / 3600;
+}
+
+/**
+ * How far through the day "now" sits, 0–1, for the current-time rule.
+ * @param {unknown} [now]
+ * @returns {number}
+ */
+export function fractionOfDay(now = new Date()) {
+  const parsed = dayjs(now);
+  if (!parsed.isValid()) return 0;
+  return (
+    (parsed.hour() * 3600 + parsed.minute() * 60 + parsed.second()) / 86400
+  );
+}
+
+/**
+ * Two-digit hour label for a day-view column, e.g. '09'.
+ * @param {number} hour
+ * @returns {string}
+ */
+export const hourLabel = hour => String(hour).padStart(2, '0');
+
+/**
  * Human duration from milliseconds.
  * @param {number | null | undefined} ms
  * @returns {string} '' when unknown.
@@ -327,6 +388,35 @@ export function groupByAgentAndDay(items = [], unassignedId = '') {
     if (!key) continue;
     const agentId = item.agentId || unassignedId;
     const cellKey = `${agentId}|${key}`;
+    if (!groups.has(cellKey)) groups.set(cellKey, []);
+    groups.get(cellKey).push(item);
+  }
+
+  for (const rows of groups.values()) {
+    rows.sort((a, b) =>
+      String(a.scheduledAt ?? '').localeCompare(String(b.scheduledAt ?? ''))
+    );
+  }
+
+  return groups;
+}
+
+/**
+ * Groups chips per agent and hour, earliest first inside an hour. The day
+ * view needs the hour bucket, not the day bucket: two runs at 09:10 and 15:40
+ * belong in different columns.
+ * @param {Array<{agentId?: string, scheduledAt?: string}>} [items]
+ * @param {string} [unassignedId]
+ * @returns {Map<string, Array<object>>}
+ */
+export function groupByAgentAndHour(items = [], unassignedId = '') {
+  const groups = new Map();
+
+  for (const item of items) {
+    if (!item) continue;
+    const key = hourKeyOf(item.scheduledAt);
+    if (!key) continue;
+    const cellKey = `${item.agentId || unassignedId}|${key}`;
     if (!groups.has(cellKey)) groups.set(cellKey, []);
     groups.get(cellKey).push(item);
   }

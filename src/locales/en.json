@@ -485,6 +485,7 @@
     "legendLabel": "Chip legend",
     "viewLabel": "Calendar view",
     "view": {
+      "day": "Day",
       "week": "Week",
       "month": "Month"
     },
@@ -559,6 +560,20 @@
       "jobs_one": "{{count}} job",
       "jobs_other": "{{count}} jobs",
       "unavailable": "Health feed unavailable."
+    },
+    "dayChipLabel": "{{job}} at {{time}}",
+    "nowLine": "Now, {{time}}",
+    "delete": {
+      "one": "Delete this run",
+      "future": "Delete this and future runs",
+      "oneTitle": "Delete this run?",
+      "futureTitle": "Delete this and future runs?",
+      "oneBody": "{{job}} at {{when}} will be removed and will not run.",
+      "futureBody": "{{job}} will stop running from {{when}}. Earlier runs are kept.",
+      "confirm": "Delete",
+      "agentDriven": "Agent-driven schedule: a single run cannot be skipped. Deleting the series stops it.",
+      "failed": "Could not delete: {{error}}",
+      "missingJob": "This entry has no job id, so it cannot be deleted."
     }
   },
   "discovery": {

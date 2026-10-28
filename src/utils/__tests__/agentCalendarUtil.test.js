@@ -7,8 +7,14 @@ import {
   dayKeyOf,
   formatDuration,
   formatInstant,
+  DAY_HOURS,
   formatTime,
+  fractionOfDay,
+  fractionOfHour,
   groupByAgentAndDay,
+  groupByAgentAndHour,
+  hourKeyOf,
+  hourLabel,
   mergeFeedItems,
   normaliseRunStatus,
   periodLabel,
@@ -200,5 +206,53 @@ describe('grouping and merging', () => {
     expect(agentStatusTone('running')).toBe('open');
     expect(agentStatusTone('')).toBe('all');
     expect(agentStatusTone('mystery')).toBe('all');
+  });
+});
+
+describe('day view helpers', () => {
+  it('builds a single-day window and labels it by date', () => {
+    const window = buildCalendarWindow({ view: 'day', anchor: TODAY });
+    expect(window.view).toBe('day');
+    expect(window.days).toHaveLength(1);
+    expect(window.start.format(DATE_KEY)).toBe('2026-10-21');
+    expect(window.start.format('HH:mm')).toBe('00:00');
+    expect(window.end.format('HH:mm')).toBe('23:59');
+    expect(periodLabel(window)).toContain('21');
+    expect(DAY_HOURS).toHaveLength(24);
+    expect(hourLabel(9)).toBe('09');
+    expect(hourLabel(23)).toBe('23');
+  });
+
+  it('steps a day at a time', () => {
+    expect(shiftAnchor(TODAY, 'day', 1).format(DATE_KEY)).toBe('2026-10-22');
+    expect(shiftAnchor(TODAY, 'day', -1).format(DATE_KEY)).toBe('2026-10-20');
+  });
+
+  it('buckets instants by hour and offset inside the hour', () => {
+    expect(hourKeyOf('2026-10-21T09:05:00')).toBe('2026-10-21|09');
+    expect(hourKeyOf('2026-10-21T23:59:00')).toBe('2026-10-21|23');
+    expect(hourKeyOf('')).toBeNull();
+    expect(hourKeyOf('nonsense')).toBeNull();
+    expect(fractionOfHour('2026-10-21T09:30:00')).toBeCloseTo(0.5, 5);
+    expect(fractionOfHour('bad')).toBe(0);
+    expect(fractionOfDay(new Date(2026, 9, 21, 12, 0, 0))).toBeCloseTo(0.5, 5);
+  });
+
+  it('groups per agent and hour, earliest first', () => {
+    const groups = groupByAgentAndHour([
+      { id: 'a', agentId: 'radar', scheduledAt: '2026-10-21T09:40:00' },
+      { id: 'b', agentId: 'radar', scheduledAt: '2026-10-21T09:10:00' },
+      { id: 'c', agentId: 'radar', scheduledAt: '2026-10-21T15:00:00' },
+      { id: 'd', agentId: '', scheduledAt: '2026-10-21T10:00:00' },
+      { id: 'e', agentId: 'radar', scheduledAt: null },
+    ]);
+
+    expect(groups.get('radar|2026-10-21|09').map(item => item.id)).toEqual([
+      'b',
+      'a',
+    ]);
+    expect(groups.get('radar|2026-10-21|15')).toHaveLength(1);
+    expect(groups.get('|2026-10-21|10')).toHaveLength(1);
+    expect(groups.size).toBe(3);
   });
 });

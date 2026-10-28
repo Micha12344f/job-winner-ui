@@ -30,6 +30,7 @@ import { statusColor } from '../config/status';
 import {
   CALENDAR_VIEWS,
   DATE_KEY,
+  DAY_HOURS,
   RUN_STATUS_TONE,
   agentStatusTone,
   buildCalendarWindow,
@@ -38,6 +39,8 @@ import {
   dayKeyOf,
   formatTime,
   groupByAgentAndDay,
+  groupByAgentAndHour,
+  hourLabel,
   mergeFeedItems,
   periodLabel,
   shiftAnchor,
@@ -45,12 +48,13 @@ import {
   windowQuery,
 } from '../utils/agentCalendarUtil';
 import AgentHealthStrip from './AgentHealthStrip';
+import { createScheduleException } from '../api/agentsClient';
 import AgentRunDrawer from './AgentRunDrawer';
 import EmptyState from './common/EmptyState';
 
 // Chips per day cell before the "+N" overflow. Week days are wide enough for
 // three labelled chips; month days only fit the compact time chips.
-const MAX_CHIPS = { week: 3, month: 2 };
+const MAX_CHIPS = { day: 3, week: 3, month: 2 };
 
 // Memoised so refetches only repaint chips whose data moved.
 const AgentChip = memo(function AgentChip({ item, label, compact, onSelect }) {
@@ -135,11 +139,26 @@ function LegendSwatch({ status, kind }) {
  * chips for recorded runs, hollow outlines for projected schedule occurrences,
  * and a drawer with the full detail of whatever is clicked.
  */
-export default function AgentCalendar({ today = new Date() }) {
+export default function AgentCalendar({
+  today = new Date(),
+  now: nowProp,
+  defaultView = 'day',
+}) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language || 'en';
-  const [view, setView] = useState('week');
+  const [view, setView] = useState(
+    CALENDAR_VIEWS.includes(defaultView) ? defaultView : 'day'
+  );
   const [anchor, setAnchor] = useState(() => dayjs(today));
+  // Live clock for the current-time rule. A caller can pin it (tests, or a
+  // screenshot) by passing `now`; otherwise it ticks once a minute.
+  const [clock, setClock] = useState(() => dayjs(nowProp ?? today));
+
+  useEffect(() => {
+    if (nowProp) return undefined;
+    const id = setInterval(() => setClock(dayjs()), 60000);
+    return () => clearInterval(id);
+  }, [nowProp]);
   const [feeds, setFeeds] = useState({
     registry: [],
     runs: [],
@@ -150,6 +169,8 @@ export default function AgentCalendar({ today = new Date() }) {
   const [failures, setFailures] = useState([]);
   const [reloadToken, setReloadToken] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   const period = useMemo(
     () => buildCalendarWindow({ view, anchor }),
@@ -226,13 +247,32 @@ export default function AgentCalendar({ today = new Date() }) {
     () => mergeFeedItems({ runs: feeds.runs, occurrences: feeds.occurrences }),
     [feeds]
   );
-  const groups = useMemo(() => groupByAgentAndDay(items, ''), [items]);
+  const isDayView = view === 'day';
+  const groups = useMemo(
+    () =>
+      isDayView
+        ? groupByAgentAndHour(items, '')
+        : groupByAgentAndDay(items, ''),
+    [items, isDayView]
+  );
+  const columns = isDayView ? DAY_HOURS : period.days;
+  const laneMin = 120;
+  const columnMin = isDayView ? 46 : view === 'week' ? 68 : 34;
+  const gridTemplate = `minmax(${laneMin}px, 168px) repeat(${columns.length}, minmax(${columnMin}px, 1fr))`;
   const summary = summariseWindow({
     runs: feeds.runs,
     occurrences: items.filter(item => item.kind === 'occurrence'),
   });
 
   const todayKey = dayKeyOf(today);
+  // Current-time rule: only meaningful on the actual current day.
+  const nowKey = dayKeyOf(clock);
+  const showNowLine =
+    isDayView &&
+    nowKey === todayKey &&
+    period.start.format(DATE_KEY) === nowKey;
+  const nowHour = clock.hour();
+  const nowOffset = (clock.minute() * 60 + clock.second()) / 3600;
   const showSkeleton = loading && lanes.length === 0 && items.length === 0;
   const registryFailed = failures.includes('registry');
   const partialFailures = failures.filter(name => name !== 'registry');
@@ -241,11 +281,42 @@ export default function AgentCalendar({ today = new Date() }) {
   const closeDrawer = useCallback(() => setSelected(null), []);
   const reload = () => setReloadToken(token => token + 1);
 
+  const deleteOccurrence = useCallback(
+    async (item, scope) => {
+      if (!item?.jobId || !item?.scheduledAt) {
+        setActionError(t('agentCalendar.delete.missingJob'));
+        return;
+      }
+      setDeleting(true);
+      setActionError('');
+      try {
+        await createScheduleException({
+          jobId: item.jobId,
+          occurrenceAt: item.scheduledAt,
+          scope,
+          note: `deleted from the agent calendar by ${scope}`,
+        });
+        setSelected(null);
+        reload();
+      } catch (error) {
+        setActionError(error?.message || String(error));
+      } finally {
+        setDeleting(false);
+      }
+    },
+    [t]
+  );
+
   const labelFor = item => {
     const status = t(`agentCalendar.status.${item.status ?? 'unknown'}`);
     const job =
       item.jobName || t(`agentCalendar.status.${item.status ?? 'unknown'}`);
     const time = formatTime(item.scheduledAt, language);
+    if (isDayView) {
+      return time
+        ? t('agentCalendar.dayChipLabel', { job, time })
+        : t('agentCalendar.chipLabelNoTime', { job, status });
+    }
     return time
       ? t('agentCalendar.chipLabel', { job, time, status })
       : t('agentCalendar.chipLabelNoTime', { job, status });
@@ -260,6 +331,16 @@ export default function AgentCalendar({ today = new Date() }) {
         loading={showSkeleton}
         error={failures.includes('health')}
       />
+
+      {actionError && (
+        <Alert
+          severity="error"
+          onClose={() => setActionError('')}
+          sx={{ mb: 2 }}
+        >
+          {t('agentCalendar.delete.failed', { error: actionError })}
+        </Alert>
+      )}
 
       <Box
         sx={{
@@ -401,167 +482,247 @@ export default function AgentCalendar({ today = new Date() }) {
         >
           <Box
             sx={{
-              display: 'grid',
-              minWidth: view === 'week' ? 660 : 900,
-              gridTemplateColumns: `minmax(120px, 168px) repeat(${
-                period.days.length
-              }, minmax(${view === 'week' ? 68 : 34}px, 1fr))`,
+              position: 'relative',
+              minWidth: isDayView ? 1272 : view === 'week' ? 660 : 900,
             }}
           >
             <Box
-              aria-hidden
               sx={{
-                position: 'sticky',
-                left: 0,
-                zIndex: 2,
-                bgcolor: 'background.paper',
-                py: 1,
-                pr: 1,
-                borderBottom: 1,
-                borderColor: 'divider',
+                display: 'grid',
+                gridTemplateColumns: gridTemplate,
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                {t('agentCalendar.agentColumn')}
-              </Typography>
-            </Box>
+              <Box
+                aria-hidden
+                sx={{
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 2,
+                  bgcolor: 'background.paper',
+                  py: 1,
+                  pr: 1,
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  {t('agentCalendar.agentColumn')}
+                </Typography>
+              </Box>
 
-            {period.days.map(day => {
-              const heading = dayHeading(day, language);
-              const isToday = day.format(DATE_KEY) === todayKey;
-              return (
-                <Box
-                  key={day.format(DATE_KEY)}
-                  data-day-heading={day.format(DATE_KEY)}
-                  sx={{
-                    py: 0.75,
-                    px: 0.5,
-                    textAlign: 'center',
-                    borderBottom: 1,
-                    borderLeft: 1,
-                    borderColor: 'divider',
-                    bgcolor: isToday
-                      ? theme =>
-                          `rgba(${theme.vars.palette.primary.mainChannel} / 0.08)`
-                      : 'transparent',
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{ display: 'block', fontWeight: 700, lineHeight: 1.3 }}
-                  >
-                    {heading.weekday}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block', lineHeight: 1.3 }}
-                  >
-                    {heading.day}
-                  </Typography>
-                </Box>
-              );
-            })}
-
-            {lanes.map(agent => (
-              <Fragment key={agent.id || 'unassigned'}>
-                <Box
-                  data-lane={agent.id || 'unassigned'}
-                  sx={{
-                    position: 'sticky',
-                    left: 0,
-                    zIndex: 2,
-                    bgcolor: 'background.paper',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    py: 1,
-                    pr: 1,
-                    borderTop: 1,
-                    borderColor: 'divider',
-                    minWidth: 0,
-                  }}
-                >
+              {columns.map(day => {
+                const isHour = typeof day === 'number';
+                const heading = isHour ? null : dayHeading(day, language);
+                const key = isHour ? `h${day}` : day.format(DATE_KEY);
+                const isToday = isHour
+                  ? period.start.format(DATE_KEY) === todayKey
+                  : day.format(DATE_KEY) === todayKey;
+                return (
                   <Box
-                    aria-hidden
+                    key={key}
+                    data-day-heading={
+                      isHour
+                        ? `${period.start.format(DATE_KEY)}T${hourLabel(day)}`
+                        : key
+                    }
                     sx={{
-                      width: 6,
-                      height: 6,
-                      flexShrink: 0,
-                      borderRadius: '50%',
-                      bgcolor: statusColor(
-                        agentStatusTone(agent.status),
-                        'main'
-                      ),
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    title={agent.name}
-                    sx={{
-                      fontWeight: 600,
-                      minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      color: agent.registered
-                        ? 'text.primary'
-                        : 'text.secondary',
+                      py: 0.75,
+                      px: 0.5,
+                      textAlign: 'center',
+                      borderBottom: 1,
+                      borderLeft: 1,
+                      borderColor: 'divider',
+                      bgcolor: isToday
+                        ? theme =>
+                            `rgba(${theme.vars.palette.primary.mainChannel} / 0.08)`
+                        : 'transparent',
                     }}
                   >
-                    {agent.name || t('agentCalendar.unassigned')}
-                  </Typography>
-                </Box>
-
-                {period.days.map(day => {
-                  const key = day.format(DATE_KEY);
-                  const cellItems = groups.get(`${agent.id}|${key}`) ?? [];
-                  const visible = cellItems.slice(0, MAX_CHIPS[view]);
-                  const overflow = cellItems.length - visible.length;
-                  return (
-                    <Box
-                      key={`${agent.id || 'unassigned'}-${key}`}
-                      data-agent-cell={`${agent.id}|${key}`}
+                    <Typography
+                      variant="caption"
                       sx={{
-                        borderTop: 1,
-                        borderLeft: 1,
-                        borderColor: 'divider',
-                        p: 0.5,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 0.25,
-                        minHeight: view === 'week' ? 48 : 40,
+                        display: 'block',
+                        fontWeight: 700,
+                        lineHeight: 1.3,
                       }}
                     >
-                      {visible.map(item => (
-                        <AgentChip
-                          key={item.id}
-                          item={item}
-                          compact={view === 'month'}
-                          label={labelFor(item)}
-                          onSelect={selectItem}
-                        />
-                      ))}
-                      {overflow > 0 && (
-                        <Typography
-                          component="span"
-                          data-testid="agent-chip-overflow"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{
-                            fontSize: '0.625rem',
-                            lineHeight: 1.2,
-                            pl: 0.25,
-                          }}
-                        >
-                          {t('agentCalendar.moreChips', { count: overflow })}
-                        </Typography>
-                      )}
-                    </Box>
-                  );
-                })}
-              </Fragment>
-            ))}
+                      {isHour ? hourLabel(day) : heading.weekday}
+                    </Typography>
+                    {!isHour && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', lineHeight: 1.3 }}
+                      >
+                        {heading.day}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
+
+              {lanes.map(agent => (
+                <Fragment key={agent.id || 'unassigned'}>
+                  <Box
+                    data-lane={agent.id || 'unassigned'}
+                    sx={{
+                      position: 'sticky',
+                      left: 0,
+                      zIndex: 2,
+                      bgcolor: 'background.paper',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      py: 1,
+                      pr: 1,
+                      borderTop: 1,
+                      borderColor: 'divider',
+                      minWidth: 0,
+                    }}
+                  >
+                    <Box
+                      aria-hidden
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        flexShrink: 0,
+                        borderRadius: '50%',
+                        bgcolor: statusColor(
+                          agentStatusTone(agent.status),
+                          'main'
+                        ),
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      title={agent.name}
+                      sx={{
+                        fontWeight: 600,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: agent.registered
+                          ? 'text.primary'
+                          : 'text.secondary',
+                      }}
+                    >
+                      {agent.name || t('agentCalendar.unassigned')}
+                    </Typography>
+                  </Box>
+
+                  {columns.map(day => {
+                    const isHour = typeof day === 'number';
+                    const key = isHour
+                      ? `${period.start.format(DATE_KEY)}|${hourLabel(day)}`
+                      : day.format(DATE_KEY);
+                    const cellItems = groups.get(`${agent.id}|${key}`) ?? [];
+                    const visible = cellItems.slice(0, MAX_CHIPS[view]);
+                    const overflow = cellItems.length - visible.length;
+                    return (
+                      <Box
+                        key={`${agent.id || 'unassigned'}-${key}`}
+                        data-agent-cell={`${agent.id}|${key}`}
+                        sx={{
+                          borderTop: 1,
+                          borderLeft: 1,
+                          borderColor: 'divider',
+                          p: 0.5,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 0.25,
+                          minHeight: isDayView ? 44 : view === 'week' ? 48 : 40,
+                        }}
+                      >
+                        {visible.map(item => (
+                          <AgentChip
+                            key={item.id}
+                            item={item}
+                            compact={isDayView || view === 'month'}
+                            label={labelFor(item)}
+                            onSelect={selectItem}
+                          />
+                        ))}
+                        {overflow > 0 && (
+                          <Typography
+                            component="span"
+                            data-testid="agent-chip-overflow"
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: '0.625rem',
+                              lineHeight: 1.2,
+                              pl: 0.25,
+                            }}
+                          >
+                            {t('agentCalendar.moreChips', { count: overflow })}
+                          </Typography>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Fragment>
+              ))}
+            </Box>
+
+            {showNowLine && (
+              <Box
+                aria-hidden
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'grid',
+                  gridTemplateColumns: gridTemplate,
+                  pointerEvents: 'none',
+                  zIndex: 3,
+                }}
+              >
+                <Box
+                  sx={{ gridColumn: `${2 + nowHour}`, position: 'relative' }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: `${nowOffset * 100}%`,
+                      transform: 'translateX(-50%)',
+                      px: 0.5,
+                      borderRadius: 0.75,
+                      bgcolor: 'error.main',
+                      color: 'error.contrastText',
+                      fontSize: '0.625rem',
+                      lineHeight: 1.5,
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {formatTime(clock.toDate(), language) ||
+                      clock.format('HH:mm')}
+                  </Box>
+                  <Box
+                    data-testid="agent-calendar-now-line"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      left: `${nowOffset * 100}%`,
+                      width: 2,
+                      bgcolor: 'error.main',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: -3,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: 'error.main',
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       )}
@@ -620,6 +781,8 @@ export default function AgentCalendar({ today = new Date() }) {
         }
         onClose={closeDrawer}
         language={language}
+        onDelete={deleteOccurrence}
+        deleting={deleting}
       />
     </Box>
   );

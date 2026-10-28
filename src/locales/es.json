@@ -485,6 +485,7 @@
     "legendLabel": "Leyenda de estados",
     "viewLabel": "Vista del calendario",
     "view": {
+      "day": "Día",
       "week": "Semana",
       "month": "Mes"
     },
@@ -559,6 +560,20 @@
       "jobs_one": "{{count}} tarea",
       "jobs_other": "{{count}} tareas",
       "unavailable": "Datos de salud no disponibles."
+    },
+    "dayChipLabel": "{{job}} a las {{time}}",
+    "nowLine": "Ahora, {{time}}",
+    "delete": {
+      "one": "Eliminar esta ejecución",
+      "future": "Eliminar esta y las siguientes",
+      "oneTitle": "¿Eliminar esta ejecución?",
+      "futureTitle": "¿Eliminar esta y las siguientes?",
+      "oneBody": "{{job}} a las {{when}} se eliminará y no se ejecutará.",
+      "futureBody": "{{job}} dejará de ejecutarse a partir de {{when}}. Se conservan las anteriores.",
+      "confirm": "Eliminar",
+      "agentDriven": "Programación dirigida por agente: no se puede omitir una sola ejecución. Eliminar la serie la detiene.",
+      "failed": "No se pudo eliminar: {{error}}",
+      "missingJob": "Esta entrada no tiene id de tarea, así que no se puede eliminar."
     }
   },
   "discovery": {
