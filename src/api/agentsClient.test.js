@@ -149,6 +149,19 @@ describe('normaliseRun', () => {
     ]);
   });
 
+  it('uses the reviewed job purpose before execution output for run detail', () => {
+    const run = normaliseRun({
+      job_name: 'LinkedIn comment tick (every 45min)',
+      purpose:
+        'Discover posts, draft comments, filter slop, then post through the operator.',
+      output: 'posted=0 skipped=1',
+    });
+
+    expect(run.detail).toBe(
+      'Discover posts, draft comments, filter slop, then post through the operator.'
+    );
+  });
+
   it('accepts duration in ms or seconds and tolerates missing fields', () => {
     expect(normaliseRun({ duration_ms: 940 }).durationMs).toBe(940);
     expect(normaliseRun({ duration_s: 1.5 }).durationMs).toBe(1500);

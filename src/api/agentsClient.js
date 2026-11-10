@@ -300,6 +300,7 @@ export function normaliseRun(row = {}, index = 0) {
       row?.exception
     ),
     detail: asString(
+      row?.purpose,
       row?.detail,
       row?.output,
       row?.message,

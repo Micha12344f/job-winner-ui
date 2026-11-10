@@ -547,7 +547,9 @@ describe('AgentCalendar', () => {
       expect(within(drawer).getByTestId('agent-run-error')).toHaveTextContent(
         'LinkedIn session expired'
       );
-      expect(within(drawer).getByText('scanned 12 jobs')).toBeInTheDocument();
+      expect(
+        within(drawer).getAllByText('scanned 12 jobs').length
+      ).toBeGreaterThan(0);
       expect(within(drawer).getByText('status reconciled')).toBeInTheDocument();
 
       await user.click(within(drawer).getByRole('button', { name: 'Close' }));

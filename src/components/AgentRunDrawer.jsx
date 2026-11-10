@@ -152,6 +152,47 @@ export default function AgentRunDrawer({
             )}
           </Stack>
 
+          {item?.kind === 'run' &&
+            (item.detail || item.related?.length || item.error) && (
+              <Box
+                data-testid="agent-run-summary"
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: 'action.hover',
+                  minWidth: 0,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 0.5, fontWeight: 700 }}
+                >
+                  {statusLabel}
+                </Typography>
+                {item.detail && (
+                  <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                    {item.detail}
+                  </Typography>
+                )}
+                {item.related?.map((entry, index) => (
+                  <Typography
+                    key={index}
+                    variant="body2"
+                    sx={{ mt: 0.5, wordBreak: 'break-word' }}
+                  >
+                    {[entry.label, entry.value].filter(Boolean).join(': ')}
+                  </Typography>
+                ))}
+                {item.error && !item.detail && (
+                  <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                    {item.error}
+                  </Typography>
+                )}
+              </Box>
+            )}
+
           <Box component="dl" sx={{ display: 'grid', gap: 1.25, m: 0 }}>
             {agentName && (
               <DetailRow label={t('agentCalendar.detail.agent')}>
